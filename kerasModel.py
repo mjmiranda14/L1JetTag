@@ -14,7 +14,7 @@ with h5py.File("sampleDatatest.h5", "r") as hf:
 # Separate datasets into inputs and outputs, expand the dimensions of the inputs to be used with Conv1D layers
 X = dataset[:, 0 : len(dataset[0]) - 1]
 y = dataset[:, len(dataset[0]) - 1]
-X = expand_dims(X, axis=3)
+X = expand_dims(X, axis=-1)
 
 # Establish the sample weights
 thebins = numpy.linspace(0, 200, 100)

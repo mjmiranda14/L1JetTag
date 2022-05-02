@@ -9,7 +9,7 @@ import tqdm
 SIGNAL_PDG_ID = 1000006
 MAX_ETA = 2.3
 N_JET_MAX = 12
-N_JET_PAD = 14
+N_FEAT = 14
 N_PART_PER_JET = 10
 DELTA_R_MATCH = 0.4
 
@@ -158,7 +158,7 @@ def main(args):
                         jetPartList.extend(partFts)  # Add particle features to particle list
                         bannedParts.append(j)  # Mark this particle as unavailable for other jets
                     if (
-                        len(jetPartList) >= N_PART_PER_JET * N_JET_PAD
+                        len(jetPartList) >= N_PART_PER_JET * N_FEAT
                     ):  # If you reach 10 particles in one jet, break and move on
                         break
                 if abs(tempTLV.Pt()) < ptCut:  # Neglect to save jet if it falls below pT Cut
@@ -170,9 +170,9 @@ def main(args):
                     jetPartList[c + 1] = tempTLV.Eta() - jetPartList[c + 1]
                     tempPhi = jetPartList[c + 2]
                     jetPartList[c + 2] = signedDeltaPhi(tempTLV.Phi(), tempPhi)
-                    c += N_JET_PAD
+                    c += N_FEAT
                 # Ensure all inputs are same length
-                while len(jetPartList) < N_PART_PER_JET * N_JET_PAD:
+                while len(jetPartList) < N_PART_PER_JET * N_FEAT:
                     jetPartList.append(0)
                 # Add in final value to indicate if particle is matched (1) or unmatched (0)
                 # to a gen signal particle by looking for gen signal particles within deltaR<0.4 of jet
