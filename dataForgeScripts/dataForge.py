@@ -1,29 +1,23 @@
+import argparse
 import time
 
-start = time.time()
-
-import ROOT as r, sys
-import numpy as np
 import h5py
+import numpy as np
+import ROOT as r
 import tqdm
 
 SIGNAL_PDG_ID = 1000006
 N_JET_MAX = 12
 N_JET_PAD = 14
 N_PART_PER_JET = 10
-
-import argparse
+DELTA_R_MATCH = 0.4
 
 parser = argparse.ArgumentParser(description="Process arguments")
 parser.add_argument("inFileName", type=str, help="input ROOT file name")
 parser.add_argument("tag", type=str, help="data/file tag")
 parser.add_argument("ptCut", type=float, help="pT cut applied to individual jets")
-parser.add_argument(
-    "trainPercent", type=int, help="fraction (in perecent) of training data (0-100)"
-)
-parser.add_argument(
-    "usePuppi", type=bool, help="candidate type (0 for PF, 1 for PUPPI)"
-)
+parser.add_argument("trainPercent", type=int, help="fraction (in perecent) of training data (0-100)")
+parser.add_argument("usePuppi", type=bool, help="candidate type (0 for PF, 1 for PUPPI)")
 
 args = parser.parse_args()
 
@@ -49,6 +43,7 @@ trainArray = []
 testArray = []
 jetFullData = []
 trainingFullData = []
+
 
 # One-Hot Encoding for Particle Type
 def scalePartType(a, n):
@@ -86,11 +81,10 @@ jetPartsArray = []
 jetDataArray = []
 
 print("Beginning Jet Construction")
+start = time.time()
 pbar = tqdm.tqdm(range(eventNum))
 for entryNum in pbar:
-    pbar.set_description(
-        "Jets: " + str(len(jetPartsArray)) + "; Signal Jets: " + str(signalPartCount)
-    )
+    pbar.set_description("Jets: " + str(len(jetPartsArray)) + "; Signal Jets: " + str(signalPartCount))
     tree.GetEntry(entryNum)
     ver = tree.vz
     # Loading particle candidates based on PF or PUPPI input
@@ -105,12 +99,8 @@ for entryNum in pbar:
         verPfX = tree.pup_vx
         verPfY = tree.pup_vy
     jetNum = 0
-    bannedParts = (
-        []
-    )  # List of indices of particles that have already been used by previous jets
-    bannedSignalParts = (
-        []
-    )  # Same deal but with indices within the gen tree corresponding to signal gen particle
+    bannedParts = []  # List of indices of particles that have already been used by previous jets
+    bannedSignalParts = []  # Same deal but with indices within the gen tree corresponding to signal gen particle
 
     # Loops through pf/pup candidates
     for i in range(len(obj)):
@@ -119,15 +109,9 @@ for entryNum in pbar:
         if jetNum >= N_JET_MAX:  # Limited to 12 jets per event at maximum
             jetNum = 0
             break
-        if (
-            i not in bannedParts
-        ):  # Identifies highest avaiable pT particle to use as seed
-            tempTLV = obj[i][
-                0
-            ]  # Takes TLorentzVector of seed particle to use for jet reconstruction
-            scalePartType(
-                seedParticle, abs(obj[i][1])
-            )  # One-Hot Encoding Seed Particle Type
+        if i not in bannedParts:  # Identifies highest avaiable pT particle to use as seed
+            tempTLV = obj[i][0]  # Takes TLorentzVector of seed particle to use for jet reconstruction
+            scalePartType(seedParticle, abs(obj[i][1]))  # One-Hot Encoding Seed Particle Type
             if obj[i][1] in [22, 130]:
                 seedParticle.extend(
                     [
@@ -155,9 +139,7 @@ for entryNum in pbar:
             for j in range(len(obj)):
                 partFts = []
                 if (
-                    obj[i][0].DeltaR(obj[j][0]) <= 0.4
-                    and i != j
-                    and (j not in bannedParts)
+                    obj[i][0].DeltaR(obj[j][0]) <= DELTA_R_MATCH and i != j and (j not in bannedParts)
                 ):  # Look for available particles within deltaR<0.4 of seed particle
                     tempTLV = tempTLV + obj[j][0]  # Add to tempTLV
                     scalePartType(partFts, obj[j][1])  # One-Hot Encoding Particle Type
@@ -183,19 +165,11 @@ for entryNum in pbar:
                                 obj[j][0].Phi(),
                             ]
                         )
-                    jetPartList.extend(
-                        partFts
-                    )  # Add particle features to particle list
-                    bannedParts.append(
-                        j
-                    )  # Mark this particle as unavailable for other jets
-                if (
-                    len(jetPartList) >= N_PART_PER_JET * N_JET_PAD
-                ):  # If you reach 10 particles in one jet, break and move on
+                    jetPartList.extend(partFts)  # Add particle features to particle list
+                    bannedParts.append(j)  # Mark this particle as unavailable for other jets
+                if len(jetPartList) >= N_PART_PER_JET * N_JET_PAD:  # If you reach 10 particles in one jet, break and move on
                     break
-            if (
-                abs(tempTLV.Pt()) < ptCut
-            ):  # Neglect to save jet if it falls below pT Cut
+            if abs(tempTLV.Pt()) < ptCut:  # Neglect to save jet if it falls below pT Cut
                 break
             # Scaling particle pT, Eta, and Phi based on jet pT, Eta, and Phi
             c = N_PART_PER_JET + 1
@@ -208,24 +182,19 @@ for entryNum in pbar:
             # Ensure all inputs are same length
             while len(jetPartList) < N_PART_PER_JET * N_JET_PAD:
                 jetPartList.append(0)
-            # Add in final value to indicate if particle is matched (1) or unmatched (0) to a gen b quark by looking for gen b quarks within deltaR<0.4 of jet
+            # Add in final value to indicate if particle is matched (1) or unmatched (0)
+            # to a gen signal particle by looking for gen signal particles within deltaR<0.4 of jet
             jetPartList.append(0)
             for e in range(len(tree.gen)):
-                if (
-                    abs(tree.gen[e][1]) == SIGNAL_PDG_ID
-                    and (e not in bannedSignalParts)
-                    and abs(tree.gen[e][0].Eta()) < 2.3
-                ):
-                    if tree.gen[e][0].DeltaR(tempTLV) <= 0.4:
+                if abs(tree.gen[e][1]) == SIGNAL_PDG_ID and (e not in bannedSignalParts) and abs(tree.gen[e][0].Eta()) < 2.3:
+                    if tree.gen[e][0].DeltaR(tempTLV) <= DELTA_R_MATCH:
                         jetPartList[-1] = 1
                         signalPartCount += 1
                         bannedSignalParts.append(e)
                         break
             # Store particle inputs and jet features in overall list
             jetPartsArray.append(jetPartList)
-            jetDataArray.append(
-                (tempTLV.Pt(), tempTLV.Eta(), tempTLV.Phi(), tempTLV.M())
-            )
+            jetDataArray.append((tempTLV.Pt(), tempTLV.Eta(), tempTLV.Phi(), tempTLV.M()))
             jetNum += 1
 
 # Break dataset into training/testing data based on train/test split input
