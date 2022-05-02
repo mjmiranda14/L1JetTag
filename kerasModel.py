@@ -1,33 +1,14 @@
-import numpy
-from keras.layers import (
-    Input,
-    Dense,
-    Flatten,
-    Dropout,
-    Activation,
-    concatenate,
-    BatchNormalization,
-    GRU,
-    Add,
-    Conv1D,
-    Conv2D,
-    Concatenate,
-)
-from keras.models import Model, Sequential
-from numpy import loadtxt, expand_dims
-import matplotlib
 import h5py
+import numpy
 import tensorflow
-from keras.models import load_model
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import sys
+from keras.models import Sequential
+from numpy import expand_dims
+from tensorflow.keras.layers import GRU, Conv1D, Dense
 
 # Load in the datasets for training and compiling the sample weights
-with h5py.File("/data/t3home000/aidandc/trainingDataver3.h5", "r") as hf:
+with h5py.File("trainingDatatest.h5", "r") as hf:
     dataset = hf["Training Data"][:]
-with h5py.File("/data/t3home000/aidandc/sampleDataver3.h5", "r") as hf:
+with h5py.File("sampleDatatest.h5", "r") as hf:
     sampleData = hf["Sample Data"][:]
 
 # Separate datasets into inputs and outputs, expand the dimensions of the inputs to be used with Conv1D layers
@@ -91,9 +72,7 @@ for i in range(len(sampleData)):
         weights.append(a[tempPt])
 
 # Train the network
-callback = tensorflow.keras.callbacks.EarlyStopping(
-    monitor="val_loss", verbose=1, patience=5
-)
+callback = tensorflow.keras.callbacks.EarlyStopping(monitor="val_loss", verbose=1, patience=5)
 model.fit(
     X,
     y,
@@ -106,4 +85,4 @@ model.fit(
 )
 
 # Save the network
-model.save("L1BTagModel.h5")
+model.save("L1JetTagModel.h5")

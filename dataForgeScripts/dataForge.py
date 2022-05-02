@@ -7,6 +7,7 @@ import ROOT as r
 import tqdm
 
 SIGNAL_PDG_ID = 1000006
+MAX_ETA = 2.3
 N_JET_MAX = 12
 N_JET_PAD = 14
 N_PART_PER_JET = 10
@@ -180,7 +181,7 @@ def main(args):
                     if (
                         abs(tree.gen[e][1]) == SIGNAL_PDG_ID
                         and (e not in bannedSignalParts)
-                        and abs(tree.gen[e][0].Eta()) < 2.3
+                        and abs(tree.gen[e][0].Eta()) < MAX_ETA
                     ):
                         if tree.gen[e][0].DeltaR(tempTLV) <= DELTA_R_MATCH:
                             jetPartList[-1] = 1
