@@ -1,4 +1,4 @@
-name: hls4ml-tutorial
+name: L1JetTag
 channels:
   - conda-forge
 dependencies:
