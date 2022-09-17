@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import tensorflow
 from keras.models import Model
-from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input
+from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input, GlobalAveragePooling1D
 
 from dataForgeScripts.dataForge import N_FEAT, N_PART_PER_JET
 
