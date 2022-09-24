@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 import matplotlib.pyplot as plt
-import tensorflow as tf
 import tensorflow 
-from keras.models import Model
+from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input, GlobalAveragePooling1D
 
 x = inputs = Input(shape=(10, 14))
