@@ -9,6 +9,8 @@ bash Miniconda3-latest-Linux-x86_64.sh
 
 export PATH="$HOME/miniconda3/bin:$PATH"
 conda config --set auto_activate_base false
+
+conda env create -f environment.yml
 </pre>
 
 
