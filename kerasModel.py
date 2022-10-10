@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import tensorflow
 from keras.models import Model
-from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input
+from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input, GlobalAveragePooling1D
 
 from dataForgeScripts.dataForge import N_FEAT, N_PART_PER_JET
 
@@ -49,7 +49,8 @@ x = Conv1D(
     activation="relu",
 )(x)
 x = Conv1D(filters=50, kernel_size=1, activation="relu")(x)
-x = Flatten()(x)
+x = GlobalAveragePooling1D()(x)
+#x = Flatten()(x)
 x = Dense(50, activation="relu")(x)
 x = Dense(10, activation="relu")(x)
 outputs = Dense(1, activation="sigmoid")(x)
