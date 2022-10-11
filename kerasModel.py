@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import tensorflow
+import matplotlib.pyplot as plt
 from keras.models import Model
 from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input, GlobalAveragePooling1D
 
