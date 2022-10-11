@@ -81,7 +81,7 @@ model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["binary_acc
 
 # Train the network
 callback = tensorflow.keras.callbacks.EarlyStopping(monitor="val_loss", verbose=1, patience=5)
-model.fit(
+history=model.fit(
     X,
     y,
     epochs=50,
