@@ -23,7 +23,7 @@ create_file = uproot.writing.writable.recreate(output_path)
 #with uproot.open(output_path) as file:
 mktree_dict = {}
 file_list = []
-if args.QCD_part == True:   
+if type(args.QCD_part) == str:
     QCD_tree = {"QCD_dz": "var * float64",
                 "QCD_dx": "var * float64",
                 "QCD_dy": "var * float64",
@@ -32,7 +32,7 @@ if args.QCD_part == True:
                 "QCD_phi": "var * float64"}
     mktree_dict = {**mktree_dict, **QCD_tree}
     file_list.append('QCD')
-if args. stop_part == True:
+if type(args.stop_part) == str:
     stop_dict = {"stop_dz": "var * float64",
                  "stop_dx": "var * float64",
                  "stop_dy": "var * float64",
@@ -43,8 +43,8 @@ if args. stop_part == True:
     file_list.append('stop')
 
 create_file.mktree('particle_level', mktree_dict)
-create_file['particle_level'].show()
 
+uproot_dict = {}
 for kind in file_list:
     for feat in [('dz',8), ('dx', 9), ('dy', 10), ('pt',11), ('eta', 12), ('phi', 13)]:
         n_bins_conc = ak.Array([])
@@ -63,27 +63,26 @@ for kind in file_list:
         n_bins = ak.Array([n, bins])
         n_bins_conc = ak.concatenate((n_bins_conc, n_bins),axis=0)
         uproot_dict[kind + "_" + feat[0]] = n_bins
-print(uproot_dict.keys())
 create_file["particle_level"].extend(uproot_dict)        
         
 
 mktree_dict = {}
 file_list = []
-if args.QCD_bkg == True:
+if type(args.QCD_bkg) == str:
     QCD_bkg_dict = {"bkg_QCD_pt": "var * float64",
                     "bkg_QCD_eta": "var * float64",
                     "bkg_QCD_phi": "var * float64",
                     "bkg_QCD_m": "var * float64"}
     mktree_dict = {**mktree_dict, **QCD_bkg_dict}
     file_list.append("bkg_QCD")
-if args.stop_bkg == True:
+if type(args.stop_bkg) == str:
     stop_bkg_dict = {"bkg_stop_pt": "var * float64",
                      "bkg_stop_eta": "var * float64",
                      "bkg_stop_phi": "var * float64",
                      "bkg_stop_m": "var * float64"}
     mktree_dict = {**mktree_dict, **stop_bkg_dict}
     file_list.append("bkg_stop")
-if args.stop_samp == True:
+if type(args.stop_samp) == str:
     stop_samp_dict = {"samp_stop_pt": "var * float64",
                       "samp_stop_eta": "var * float64",
                       "samp_stop_phi": "var * float64",
@@ -92,7 +91,6 @@ if args.stop_samp == True:
     file_list.append("samp_stop")
     
 create_file.mktree('jet_level', mktree_dict)
-create_file['jet_level'].show()
 
 uproot_dict = {}
 for kind in file_list:
@@ -100,7 +98,7 @@ for kind in file_list:
         n_bins_conc = ak.Array([])
         if kind == "bkg_QCD":
             h5file = args.QCD_bkg #"missedSignalPartsDatasamp.h5"
-            array_name = "Data"
+            array_name = "Jet Data"
         elif kind == "bkg_stop":
             h5file = args.stop_bkg #"missedSignalPartsDatasamp.h5"
             array_name = "Data"
@@ -116,4 +114,4 @@ for kind in file_list:
         n_bins = ak.Array([n, bins])
         n_bins_conc = ak.concatenate((n_bins_conc, n_bins),axis=0)
         uproot_dict[kind + "_" + feat] = n_bins
-create_file["jet_level"].extend(uproot_dict)   
+create_file["jet_level"].extend(uproot_dict)
