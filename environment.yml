@@ -6,6 +6,7 @@ dependencies:
   - jupyterhub
   - pydot
   - graphviz
+  - root
   - pip
   - pip:
     - jupyter

@@ -1,10 +1,11 @@
 import argparse
 import time
-
 import h5py
 import numpy as np
 import ROOT as r
 import tqdm
+
+#inFileName = "root://cmseos.fnal.gov///store/user/mequinna/file4russell_2.root"
 
 SIGNAL_PDG_ID = 1000006
 MAX_ETA = 2.3
@@ -17,9 +18,13 @@ r.gROOT.SetBatch(1)
 
 
 def main(args):
+    #tag = "QCD"
+    #ptCut = 200
+    #trainPercent = 50
+    #usePuppi = 0
 
     inFileName = args.inFileName
-    print("Reading from " + str(inFileName))
+    print("Reading from " + inFileName)
 
     inFile = r.TFile.Open(inFileName, "READ")
 
@@ -69,10 +74,17 @@ def main(args):
 
     jetPartsArray = []
     jetDataArray = []
+    signalPartArray = []
+    missedSignalPartArray = []
+    partType = []
+        
 
     print("Beginning Jet Construction")
     start = time.time()
     pbar = tqdm.tqdm(range(eventNum))
+    
+    missedSignalParts = 0
+    signalParts = 0
     for entryNum in pbar:
         pbar.set_description("Jets: " + str(len(jetPartsArray)) + "; Signal Jets: " + str(signalPartCount))
         tree.GetEntry(entryNum)
@@ -94,6 +106,7 @@ def main(args):
 
         # Loops through pf/pup candidates
         for i in range(len(obj)):
+            partType.append(obj[i][1]) #adding particle type
             jetPartList = []
             seedParticle = []
             if jetNum >= N_JET_MAX:  # Limited to 12 jets per event at maximum
@@ -190,9 +203,30 @@ def main(args):
                             break
                 # Store particle inputs and jet features in overall list
                 jetPartsArray.append(jetPartList)
-                jetDataArray.append((tempTLV.Pt(), tempTLV.Eta(), tempTLV.Phi(), tempTLV.M()))
+                jetDataArray.append((tempTLV.Pt(), tempTLV.Eta(), tempTLV.Phi(), tempTLV.M(), jetPartList[-1]))
                 jetNum += 1
 
+        
+
+        for n in range(len(tree.gen)): 
+            
+            tlv = 0 
+            if (
+                    (n not in bannedSignalParts)
+                    and (abs(tree.gen[n][1]) == SIGNAL_PDG_ID) 
+            ):
+                missedSignalParts += 1
+                tlv = tree.gen[n][0]
+                missedSignalPartArray.append((tlv.Pt(), tlv.Eta(), tlv.Phi(), tlv.M(),
+                                        tlv.Px(), tlv.Py(), tlv.Pz() ))
+
+            elif (n in bannedSignalParts):
+                tlv = tree.gen[n][0]
+                signalPartArray.append(( tlv.Pt(), tlv.Eta(), tlv.Phi(), tlv.M(),
+                                        tlv.Px(), tlv.Py(), tlv.Pz() ))
+                
+                
+                
     # Break dataset into training/testing data based on train/test split input
     splitIndex = int(float(args.trainPercent) / 100 * len(jetPartsArray))
     trainArray = jetPartsArray[:splitIndex]
@@ -205,13 +239,15 @@ def main(args):
     print("Total No. of Matched Jets: " + str(signalPartCount))
     print("No. of Jets in Training Data: " + str(len(trainArray)))
     print("No. of Jets in Testing Data: " + str(len(testArray)))
+    print("No. of missed signal particles during reconstruction: " + str(missedSignalParts))
+    print("Total No. of signal particles: " + str(signalParts))
 
     # Final Check
     print("Debug that everything matches up in length")
     assert len(testArray) == len(jetFullData) and len(trainArray) == len(trainingFullData)
 
     # Save datasets as h5 files
-
+    
     # Testing Data: Particle Inputs for each jet of Shape [...,141]
     with h5py.File("testingData" + str(args.tag) + ".h5", "w") as hf:
         hf.create_dataset("Testing Data", data=testArray)
@@ -222,21 +258,28 @@ def main(args):
     with h5py.File("trainingData" + str(args.tag) + ".h5", "w") as hf:
         hf.create_dataset("Training Data", data=trainArray)
     # Sample Data: Jet Features (pT, Eta, Phi, Mass) of each training data jet of shape [...,4]
-    with h5py.File("sampleData" + str(args.tag) + ".h5", "w") as hf:
+    with h5py.File("sampleData" + str(args.tag) + ".h5", "w") as hf: 
         hf.create_dataset("Sample Data", data=trainingFullData)
+    with h5py.File("signalPartsData" + str(args.tag) +".h5", "w") as hf: 
+        hf.create_dataset("Data", data=signalPartArray)
+    with h5py.File("missedSignalPartsData"+ str(args.tag) + ".h5", "w") as hf: 
+        hf.create_dataset("Data", data=missedSignalPartArray)
+    with h5py.File("ParticleTypes" + str(args.tag) + ".h5", "w") as hf: 
+        hf.create_dataset("pdgID", data=partType)
+        
 
     end = time.time()
     print(str(end - start))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process arguments")
-    parser.add_argument("inFileName", type=str, help="input ROOT file name")
-    parser.add_argument("tag", type=str, help="data/file tag")
-    parser.add_argument("ptCut", type=float, help="pT cut applied to individual jets")
-    parser.add_argument("trainPercent", type=int, help="fraction (in perecent) of training data (0-100)")
-    parser.add_argument("usePuppi", type=bool, help="candidate type (0 for PF, 1 for PUPPI)")
+     parser = argparse.ArgumentParser(description="Process arguments")
+     parser.add_argument("inFileName", type=str, help="input ROOT file name")
+     parser.add_argument("tag", type=str, help="data/file tag")
+     parser.add_argument("ptCut", type=float, help="pT cut applied to individual jets")
+     parser.add_argument("trainPercent", type=int, help="fraction (in perecent) of training data (0-100)")
+     parser.add_argument("usePuppi", type=bool, help="candidate type (0 for PF, 1 for PUPPI)")
 
-    args = parser.parse_args()
+     args = parser.parse_args()
 
-    main(args)
+     main(args)
