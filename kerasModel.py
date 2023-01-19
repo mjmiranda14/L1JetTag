@@ -8,16 +8,15 @@ from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input, GlobalAverage
 from dataForgeScripts.dataForge import N_FEAT, N_PART_PER_JET
 
 # Load in the datasets for training and compiling the sample weights
-with h5py.File("trainingDataStop_1_30.h5", "r") as hf:
+with h5py.File("data/trainingDataSig.h5", "r") as hf:
     dataset = hf["Training Data"][:]
-with h5py.File("trainingDataQCD_30.h5", "r") as hf:
+with h5py.File("data/trainingDataQCD.h5", "r") as hf:
     datasetQCD = hf["Training Data"][:]
-with h5py.File("sampleDataStop_30.h5", "r") as hf:
+with h5py.File("data/sampleDataSig.h5", "r") as hf:
     sampleData = hf["Sample Data"][:]
 
 
 dataset = np.concatenate((dataset, datasetQCD))#Put datasets on top of one another
-#dataset = np.load("AugTrainingDataPt30.npy")
 np.random.shuffle(dataset) #randomize QCD and Stop samples
 
 # Separate datasets into inputs and outputs, expand the dimensions of the inputs to be used with Conv1D layers
