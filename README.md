@@ -44,8 +44,14 @@ We have two main sources of background our data: all jets reconstructed from the
 
 `python3 removeBackground.py <path/train/filename.h5> <path/test/file.h5>`
 
-# Training:
-Add paths of the training files resulting from DataForge.py.
+# Training Keras Model:
+Inside of `kerasModel.py`, add paths to the training files resulting from DataForge.py and/or `removeBackground.py`.
 
-# ROC Curves:
-Inside ROC.py, add paths of the testing data resulting from the DataForge.py.
+# ROC Curve from Keras Model:
+Inside `ROC.py`, add paths of the testing data resulting from the DataForge.py and/or `removeBackground.py`.
+
+# Training QKeras Model:
+Inside of `qkerasModel.py`, add paths to the training files resulting from DataForge.py and/or `removeBackground.py`.
+
+# ROC Curve from QKeras Model:
+Inside `qkROC.py`, add paths of the testing data resulting from the DataForge.py and/or `removeBackground.py`.
