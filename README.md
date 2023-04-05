@@ -60,11 +60,11 @@ Inside `qkROC.py`, add paths of the testing data resulting from the DataForge.py
 # Conversion of ML models to HLS through HLS4ML:
 Currently, the workflow is as follows:
 
- - Train and test the keras and qkeras models on LPC. From `kerasModel.py', the file `L1JetTagModel.h5` will result. From the `qkerasModel.py`, the file `qkL1JetTagModel.h5` will result.
+ - Train and test the keras and qkeras models on LPC. From `kerasModel.py`, the file `L1JetTagModel.h5` will result. From the `qkerasModel.py`, the file `qkL1JetTagModel.h5` will result.
  - I copy these files into my PC using: `scp <lpc username>:</file/path/to/L1JetTagModel.h5> </directory/in/my/computer>`.
  
 Then, I clone this repo inside Scully because we can source `Vivado hls` from there. Now, I have to copy the `/directory/in/my/computer/...Model.h5` files into the `L1JetTag` folder cloned in Scully.  Thus:
- - `scp </directory/in/my/computer/...Model.h5> <Scully username>/path/to/L1JetTag/folder/>`
+ - `scp </directory/in/my/computer/...Model.h5> <Scully username>:/path/to/L1JetTag/folder/>`
 
 At this point, we are ready to convert the models contained in `.h5` files to the hls firmware using following the next steps:
  - `ssh -L localhost:8888:localhost:8888 <username>@scully.physics.ucsd.edu` (any 4 digits for local host.
