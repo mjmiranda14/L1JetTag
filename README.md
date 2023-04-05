@@ -1,4 +1,4 @@
-# L1LLPTag
+# L1 LLP Tagger
 Scripts and code used for the ongoing Level 1 LLP tagging project for CMS.
 
 
@@ -16,7 +16,7 @@ conda config --set auto_activate_base false
 After installing conda, we need to set up a virtual environment containing the modules used in the scripts. To create, and subsequently, activate the virtual environment, run:
 
 <pre>
-git clone </path/to/this/repo>
+git clone /path/to/this/repo
 conda env create -f environment.yml
 conda activate L1JetTag
 </pre>
@@ -65,3 +65,12 @@ Currently, the workflow is as follows:
  
 Then, I clone this repo inside Scully because we can source `Vivado hls` from there. Now, I have to copy the `/directory/in/my/computer/...Model.h5` files into the `L1JetTag` folder cloned in Scully.  Thus:
  - `scp </directory/in/my/computer/...Model.h5> <Scully username>/path/to/L1JetTag/folder/>`
+
+At this point, we are ready to convert the models contained in `.h5` files to the hls firmware using following the next steps:
+ - `ssh -L localhost:8888:localhost:8888 <username>@scully.physics.ucsd.edu` (any 4 digits for local host.
+ - `jupyter notebook --no-browser --port=8888 --ip localhost`
+
+Now, open notebook `L1JetTagModel_hls_config.ipynb` or `qkL1JetTagModel_hls_config.ipynb`, respectively for keras and qkeras model. Then, inside of these file, make sure that the correct path is added for the `L1JetTagModel.h5` and `qkL1JetTagModel.h5` files. If the these files were copied to your `L1JetTag` folder in Scully, then you should not change anything, i.e.:
+ - The line `model = load_model("L1JetTagModel.h5")` should stay like this in `L1JetTagModel_hls_config.ipynb`.
+ - The line `qmodel = load_qmodel("qkL1JetTagModel.h5")` should stay like this in `qkL1JetTagModel_hls_config.ipynb`.
+
