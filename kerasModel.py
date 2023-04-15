@@ -8,20 +8,14 @@ from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input, GlobalAverage
 from dataForgeScripts.dataForge import N_FEAT, N_PART_PER_JET
 
 def main(args):
-# Load in the datasets for training and compiling the sample weights
-    #with h5py.File("dataForgeScripts/newTrainDataST30.h5", "r") as hf:
-    #    dataset = hf["Training Data"][:]
-    #with h5py.File("dataForgeScripts/trainingDataQCD30.h5", "r") as hf:
-    #    datasetQCD = hf["Training Data"][:]
-    #with h5py.File("dataForgeScripts/sampleDataSTop30.h5", "r") as hf:
-    #    sampleData = hf["Sample Data"][:]
-    inFile1 = args.SignalTrainFile
-    inFile2 = args.BkgTrainFile
-    inFile3 = args.JetData_TrainFile
+    
+    signalTrainFile = args.SignalTrainFile
+    bkgTrainFile = args.BkgTrainFile
+    jetData_TrainFile = args.JetData_TrainFile
 
-    print("Reading signal from " + inFile1)
-    print("Reading  from " + inFile2)
-    print("Reading  from " + inFile3)
+    print("Reading signal from " + signalTrainFile)
+    print("Reading  from " + bkgTrainFile)
+    print("Reading  from " + jetData_TrainFile)
 
     with h5py.File(inFile1, "r") as hf:
         dataset = hf["Training Data"][:]
