@@ -46,7 +46,9 @@ We have two main sources of background in our data: all jets reconstructed from 
 `python3 removeBackground.py <path/train/filename.h5> <path/test/file.h5>`
 
 # Training Keras Model:
-Inside of `kerasModel.py`, add paths to the training files resulting from DataForge.py and/or `removeBackground.py`.
+
+We can run can run this by passing three arguments the following way:
+`python3 kerasModel.py ""SignalTrainFile" "BkgTrainFile" "JetData_TrainFile"`. These files should have resulted from the DataForge.py and/or `removeBackground.py`.
 
 # ROC Curve from Keras Model:
 Inside `ROC.py`, add paths of the testing data resulting from the DataForge.py and/or `removeBackground.py`.
