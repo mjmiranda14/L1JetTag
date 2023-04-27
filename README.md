@@ -26,7 +26,7 @@ Note inside the .yml file that the environment name will be L1JetTag.
 # Reconstructing Jets:
 The Ntuples containing particle data, i.e. events with particles, can be accessed using the grid through LXPLUS or LPC for instance. Once we can access the Ntuples, we need to extract the particle information and cluster them into jets with the `dataForgeScripts/dataForge.py` script. Such a file can be run using the following command with the corresponding arguments: 
 
-`$ Python3 DataF.py </path/to/file> (using xrootd or another access mode> QCDpt30 30 50 0`
+`$ Python3 DataF.py </path/to/file> (using xrootd or another access mode) QCDpt30 30 50 0`
 
 Order of the arguments is as follows:
 
