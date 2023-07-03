@@ -7,30 +7,16 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Conv1D, Dense, Flatten, Input, GlobalAveragePooling1D
 from dataForgeScripts.dataForge import N_FEAT, N_PART_PER_JET
 
-<<<<<<< HEAD
-# Load in the datasets for training and compiling the sample weights
-with h5py.File("data/trainingDataSig.h5", "r") as hf:
-    dataset = hf["Training Data"][:]
-with h5py.File("data/trainingDataQCD.h5", "r") as hf:
-    datasetQCD = hf["Training Data"][:]
-with h5py.File("data/sampleDataSig.h5", "r") as hf:
-    sampleData = hf["Sample Data"][:]
-=======
 def main(args):
     
     signalTrainFile = args.SignalTrainFile
     bkgTrainFile = args.BkgTrainFile
     jetData_TrainFile = args.JetData_TrainFile
->>>>>>> upstream/main
 
     print("Reading signal from " + signalTrainFile)
     print("Reading  from " + bkgTrainFile)
     print("Reading  from " + jetData_TrainFile)
 
-<<<<<<< HEAD
-dataset = np.concatenate((dataset, datasetQCD))#Put datasets on top of one another
-np.random.shuffle(dataset) #randomize QCD and Stop samples
-=======
     with h5py.File(inFile1, "r") as hf:
         dataset = hf["Training Data"][:]
     with h5py.File(inFile2, "r") as hf:
@@ -41,7 +27,6 @@ np.random.shuffle(dataset) #randomize QCD and Stop samples
     dataset = np.concatenate((dataset, datasetQCD))#Put datasets on top of one another
 #dataset = np.load("AugTrainingDataPt30.npy")
     np.random.shuffle(dataset) #randomize QCD and Stop samples
->>>>>>> upstream/main
 
     
 # Separate datasets into inputs and outputs, expand the dimensions of the inputs to be used with Conv1D layers
