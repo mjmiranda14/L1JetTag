@@ -37,32 +37,8 @@ def main(args):
     jetNum = 0
     signalPartCount = 0
     jetPartList = []
-    trainArray = []
-    testArray = []
     jetFullData = []
     trainingFullData = []
-
-
-    # One-Hot Encoding for Particle Type
-    def scalePartType(a, n):
-        if n == 11:
-            a.extend((1, 0, 0, 0, 0, 0, 0, 0))  # Electron
-        elif n == -11:
-            a.extend((0, 1, 0, 0, 0, 0, 0, 0))  # Positron
-        elif n == 13:
-            a.extend((0, 0, 1, 0, 0, 0, 0, 0))  # Muon
-        elif n == -13:
-            a.extend((0, 0, 0, 1, 0, 0, 0, 0))  # Anti-Muon
-        elif n == 22:
-            a.extend((0, 0, 0, 0, 1, 0, 0, 0))  # Photon
-        elif n == 130:
-            a.extend((0, 0, 0, 0, 0, 1, 0, 0))  # Neutral Meson
-        elif n == 211:
-            a.extend((0, 0, 0, 0, 0, 0, 1, 0))  # Pion
-        elif n == -211:
-            a.extend((0, 0, 0, 0, 0, 0, 0, 1))  # Anti-Pion
-        else:
-            a.extend((0, 0, 0, 0, 0, 0, 0, 0))  # Case for unknown particle
 
     # Scaling Phi for particles relative to their jet
     def signedDeltaPhi(phi1, phi2):
@@ -86,14 +62,22 @@ def main(args):
 
 ##########################################
     print("Beginning Jet Construction")
+    h_LeadPt =     r.TH1F(name="h_LeadPt", title='h_leadPT', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
+    h_SubLeadPt =  r.TH1F(name="h_SubLeadPt", title='h_SubleadPT', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
+    h_AllPt =      r.TH1F(name="h_AllJetPt", title='h_AllJetPT', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
+    h_LeadPhi =    r.TH1F(name="h_LeadPhi", title='h_LeadPhi', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
+    h_SubLeadPhi = r.TH1F(name="h_SubLeadPhi", title='h_SubLeadPhi', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
+    h_AllPhi =     r.TH1F(name="h_AllPhi", title='h_AllPhi', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
+    h_LeadEta =    r.TH1F(name="h_LeadEta", title='h_LeadEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
+    h_SubLeadEta = r.TH1F(name="h_SubLeadEta", title='h_SubLeadEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
+    h_AllEta =     r.TH1F(name="h_AllEta", title='h_AllEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
     start = time.time()
 #    pbar = tqdm.tqdm(range(int(eventNum))
-    numEvents = args.numEvents
-    pbar = tqdm.tqdm(range(int(numEvents)))    
+    pbar = tqdm.tqdm(range(int(10000)))    
     missedSignalParts = 0
     signalParts = 0
     for entryNum in pbar:
-        pbar.set_description("Jets: " + str(len(jetPartsArray)) + "; Signal Jets: " + str(signalPartCount))
+        #pbar.set_description("Jets: " + str(len(jetPartsArray)) + "; Signal Jets: " + str(signalPartCount))
         tree.GetEntry(entryNum)
         ver = tree.vz
         jetlist = []  
@@ -124,7 +108,6 @@ def main(args):
                 break
             if i not in bannedParts:  # Identifies highest avaiable pT particle to use as seed
                 tempTLV = obj[i][0]  # Takes TLorentzVector of seed particle to use for jet reconstruction
-                scalePartType(seedParticle, abs(obj[i][1]))  # One-Hot Encoding Seed Particle Type
                 if obj[i][1] in [22, 130]:
                     seedParticle.extend(
                         [
@@ -155,7 +138,6 @@ def main(args):
                         obj[i][0].DeltaR(obj[j][0]) <= DELTA_R_MATCH and i != j and (j not in bannedParts)
                     ):  # Look for available particles within deltaR<0.4 of seed particle
                         tempTLV = tempTLV + obj[j][0]  # Add to tempTLV
-                        scalePartType(partFts, obj[j][1])  # One-Hot Encoding Particle Type
                         if obj[j][1] == 22 or obj[j][1] == 130:
                             partFts.extend(
                                 [
@@ -215,30 +197,93 @@ def main(args):
                 jetPartsArray.append(jetPartList)
                 jetDataArray.append((tempTLV.Pt(), tempTLV.Eta(), tempTLV.Phi(), tempTLV.M(), jetPartList[-1]))
            
+                h_AllPt.Fill(tempTLV.Pt())
+                h_AllPhi.Fill(tempTLV.Phi())
+                h_AllEta.Fill(tempTLV.Eta())
                 jetlist.append(tempTLV)
                 jetNum +=1
 
 
-
-        for n in range(len(tree.gen)):
-            tlv = 0 
-            if (
-                    (n not in bannedSignalParts)
-                    and (abs(tree.gen[n][1]) == SIGNAL_PDG_ID) 
-            ):
-                missedSignalParts += 1
-                tlv = tree.gen[n][0]
-                missedSignalPartArray.append((tlv.Pt(), tlv.Eta(), tlv.Phi(), tlv.M(),
-                                        tlv.Px(), tlv.Py(), tlv.Pz() ))
-
-            elif (n in bannedSignalParts):
-                tlv = tree.gen[n][0]
-                signalPartArray.append(( tlv.Pt(), tlv.Eta(), tlv.Phi(), tlv.M(),
-                                        tlv.Px(), tlv.Py(), tlv.Pz() ))
-                
-                
+        h_LeadPt.Fill(jetlist[0].Pt())
+        h_LeadPhi.Fill(jetlist[0].Phi())
+        h_LeadEta.Fill(jetlist[0].Eta())
+        #print("eventNum: ",entryNum, "     NJets: ",jetNum, "    len(jetlist): ", len(jetlist))
+        #print("Jet 0: ", jetlist[0].Pt(),jetlist[0].Eta(), jetlist[0].Phi())
+        #print("Jet 1: ", jetlist[1].Pt(),jetlist[1].Eta(), jetlist[1].Phi())        
+        #print("Jet 2: ", jetlist[2].Pt(),jetlist[2].Eta(), jetlist[2].Phi())        
+        if (len(jetlist)>1):
+           h_SubLeadPt.Fill(jetlist[1].Pt())
+           h_SubLeadPhi.Fill(jetlist[1].Phi())
+           h_SubLeadEta.Fill(jetlist[1].Eta())
+           #print(entryNum)
         eventjets.append(jetlist)            
 
+    c = r.TCanvas()
+
+    h_LeadPhi.SetLineColor(r.kBlue)
+    h_LeadPhi.SetTitle("Lead Jet #phi")
+    h_LeadPhi.Draw()
+    c.Draw()
+    c.SaveAs('h_LeadPhi.png')
+    c.Clear()
+
+    h_SubLeadPhi.SetLineColor(r.kBlue)
+    h_SubLeadPhi.SetTitle("Sub-Lead Jet #phi")
+    h_SubLeadPhi.Draw()
+    c.Draw()
+    c.SaveAs('h_SubLeadPhi.png')
+    c.Clear()
+
+    h_AllPhi.SetLineColor(r.kBlue)
+    h_AllPhi.SetTitle("All Jets #phi")
+    h_AllPhi.Draw()
+    c.Draw()
+    c.SaveAs('h_AllPhi.png')
+    c.Clear()
+
+    h_LeadEta.SetLineColor(r.kBlue)
+    h_LeadEta.SetTitle("Lead Jet #eta")
+    h_LeadEta.Draw()
+    c.Draw()
+    c.SaveAs('h_LeadEta.png')
+    c.Clear()
+
+    h_SubLeadEta.SetLineColor(r.kBlue)
+    h_SubLeadEta.SetTitle("Sub-Lead Jet #eta")
+    h_SubLeadEta.Draw()
+    c.Draw()
+    c.SaveAs('h_SubLeadEta.png')
+    c.Clear()
+
+    h_AllEta.SetLineColor(r.kBlue)
+    h_AllEta.SetTitle("All Jets #eta")
+    h_AllEta.Draw()
+    c.Draw()
+    c.SaveAs('h_AllEta.png')
+    c.Clear()
+
+    c.SetLogy()
+
+    h_LeadPt.SetLineColor(r.kBlue)
+    h_LeadPt.SetTitle("Lead Jet p_{T}")
+    h_LeadPt.Draw()
+    c.Draw()
+    c.SaveAs('h_LeadPt.png')
+    c.Clear()
+
+    h_SubLeadPt.SetLineColor(r.kBlue)
+    h_SubLeadPt.SetTitle("Sub-Lead Jet p_{T}")
+    h_SubLeadPt.Draw()
+    c.Draw()
+    c.SaveAs('h_SubLeadPt.png')
+    c.Clear()
+
+    h_AllPt.SetLineColor(r.kBlue)
+    h_AllPt.SetTitle("All Jets p_{T}")
+    h_AllPt.Draw()
+    c.Draw()
+    c.SaveAs('h_AllPt.png')
+    c.Clear()
 #    # Break dataset into training/testing data based on train/test split input
 #    splitIndex = int(float(args.trainPercent) / 100 * len(jetPartsArray))
 #    trainArray = jetPartsArray[:splitIndex]
@@ -283,180 +328,168 @@ def main(args):
     end = time.time() # timing
     print(f'Elapsed Time: {str(end - start)}')
 
-#    print(f'Length of eventjets = {len(eventjets)}')
-#    print(f'Length of nested list for last event = {len(eventjets[len(eventjets)-1])}')
-     
-    twojetevents = []
-    onejetevents = []
-    zerojetevents = []
+    print(f'Length of eventjets = {len(eventjets)}')
+#    print(f'Length of nested list = {len(eventjets[0])}')
     for i in range(len(eventjets)):
-        if len(eventjets[i]) == 2:
-             twojetevents.append(i)
-        elif len(eventjets[i]) == 1:
-             onejetevents.append(i)
-        elif len(eventjets[i]) == 0:
-             zerojetevents.append(i)
-    print(f'The events with 0 jets are: {zerojetevents}')     
-    print(f'The events with 1 jet are: {onejetevents}')
-#    print(f'\nAnd the events with 2 jets are: {twojetevents}')
+         if len(eventjets) <= 2:
+              print(f'Event {i} has less than or equal to 2 jets')
 
-#    print(f'eventjets[0][0].Pt() = {eventjets[0][0].Pt()}')
-#    print(f'eventjets[0][1].Pt() = {eventjets[0][1].Pt()}')
-#    print(f'eventjets[{len(eventjets)-1}][0].Pt() = {eventjets[len(eventjets)-1][0].Pt()}')
-#    print(f'eventjets[{len(eventjets)-1}][1].Pt() = {eventjets[len(eventjets)-1][1].Pt()}')
+    print(f'eventjets[0][0].Phi() = {eventjets[0][0].Phi()}')
+    print(f'eventjets[0][1].Phi() = {eventjets[0][1].Phi()}')
+    print(f'eventjets[{len(eventjets)-1}][0].Phi() = {eventjets[len(eventjets)-1][0].Phi()}')
+    print(f'eventjets[{len(eventjets)-1}][1].Phi() = {eventjets[len(eventjets)-1][1].Phi()}')
 
 #    for i in range(len(eventjets)):
 #         if i >= (len(eventjets) - 5):
-#             print(eventjets[i][1].Pt())
+#              print(eventjets[i][1].Phi())
     
-
-    a1 = r.TH1F(name="a1", title='my histo', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
-    c1 = r.TCanvas()
-    for i in range(len(eventjets)):
-         for j in range(len(eventjets[i])):
-              a1.Fill(eventjets[i][j].Pt())
-    a1.SetLineColor(r.kBlue)
-    a1.SetTitle("Full Jet p_{T}")
-    c1.SetLogy()
-    a1.Draw()
-    c1.Draw()
-#    c1.SaveAs('fulljetPt.png')
-
-    a2 = r.TH1F(name="a2", title='my histo', nbinsx=100, xlow=-100, xup=2000)
-    c2 = r.TCanvas()
-    for i in range(len(eventjets)):
-         a2.Fill(eventjets[i][0].Pt())
-    a2.SetLineColor(r.kRed)
-    a2.SetTitle("Lead Jet p_{T}")
-    c2.SetLogy()
-    a2.Draw()
-    c2.Draw()
-#    c2.SaveAs('leadjetPt.png')
-
-## anything numEvents >= 2540 throws a 'IndexError: list index out of range' for the subleadjets ##
-    a3 = r.TH1F(name="a3", title='my histo', nbinsx=100, xlow=-100, xup=2000)
-    c3 = r.TCanvas()
-    for i in range(len(eventjets)):
-         try:
-              a3.Fill(eventjets[i][1].Pt())
-         except:
-              continue
-    a3.SetLineColor(r.kGreen)
-    a3.SetTitle("Sublead Jet p_{T}")
-    c3.SetLogy()
-    a3.Draw()
-    c3.Draw()
-#    c3.SaveAs('subleadjetPt.png')
-
-    b1 = r.TH1F(name="b1", title='my histo', nbinsx=100, xlow=-5, xup=5) # Eta Plots
-    d1 = r.TCanvas()
-    for i in range(len(eventjets)):
-         for j in range(len(eventjets[i])):
-              b1.Fill(eventjets[i][j].Eta())
-    b1.SetLineColor(r.kBlue) # Graphing Eta Plots
-    b1.SetTitle("Full Jet #eta")
-    d1.SetLogy()
-    b1.Draw()
-    d1.Draw()
-#    d1.SaveAs('fulljetEta.png')
-
-    b2 = r.TH1F(name="b2", title='my histo', nbinsx=100, xlow=-5, xup=5)
-    d2 = r.TCanvas()
-    for i in range(len(eventjets)):
-         b2.Fill(eventjets[i][0].Eta())
-    b2.SetLineColor(r.kRed)
-    b2.SetTitle("Lead Jet #eta")
-    d2.SetLogy()
-    b2.Draw()
-    d2.Draw()
-#    d2.SaveAs('leadjetEta.png')
-
-    b3 = r.TH1F(name="b3", title='my histo', nbinsx=100, xlow=-5, xup=5)
-    d3 = r.TCanvas()
-    for i in range(len(eventjets)):
-         try:
-              b3.Fill(eventjets[i][1].Eta())
-         except:
-              continue
-    b3.SetLineColor(r.kGreen)
-    b3.SetTitle("Sublead Jet #eta")
-    d3.SetLogy()
-    b3.Draw()
-    d3.Draw()
-#    d3.SaveAs('subleadjetEta.png')
-
-    e1 = r.TH1F(name="e1", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
-    f1 = r.TCanvas()
-    for i in range(len(eventjets)):
-         for j in range(len(eventjets[i])):
-              e1.Fill(eventjets[i][j].Phi())
-    e1.SetLineColor(r.kBlue) # Graphing Phi Plots
-    e1.SetTitle("Full Jet #Phi")
-    e1.Draw()
-    f1.Draw()
-#    f1.SaveAs('fulljetPhi.png')
-
-    e2 = r.TH1F(name="e2", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5)
-    f2 = r.TCanvas()
-    for i in range(len(eventjets)):
-         e2.Fill(eventjets[i][0].Phi())
-    e2.SetLineColor(r.kRed)
-    e2.SetTitle("Lead Jet #Phi")
-    e2.Draw()
-    f2.Draw()
-#    f2.SaveAs('leadjetPhi.png')
-
-    e3 = r.TH1F(name="e3", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5)
-    f3 = r.TCanvas()
-    for i in range(len(eventjets)):
-         try:
-              e3.Fill(eventjets[i][1].Phi())
-         except:
-              continue
-    e3.SetLineColor(r.kGreen)
-    e3.SetTitle("Sublead Jet #Phi")
-    e3.Draw()
-    f3.Draw()
-#    f3.SaveAs('subleadjetPhi.png')
-    
-    g1 = r.TH1F(name="g1", title='my histo', nbinsx=100, xlow=0, xup=500) # Mass Plots
-    h1 = r.TCanvas()
-    for i in range(len(eventjets)):
-         for j in range(len(eventjets[i])):
-              g1.Fill(eventjets[i][j].M())
-    g1.SetLineColor(r.kBlue) # Graphing Mass Plots
-    g1.SetTitle("Full Jet Mass")
-    h1.SetLogy()
-    g1.Draw()
-    h1.Draw()
-#    h1.SaveAs('fulljetMass.png')
-
-    g2 = r.TH1F(name="g2", title='my histo', nbinsx=100, xlow=0, xup=500)
-    h2 = r.TCanvas()
-    for i in range(len(eventjets)):
-         g2.Fill(eventjets[i][0].M())
-    g2.SetLineColor(r.kRed)
-    g2.SetTitle("Lead Jet Mass")
-    h2.SetLogy()
-    g2.Draw()
-    h2.Draw()
-#    h2.SaveAs('leadjetMass.png')
-
-    g3 = r.TH1F(name="g3", title='my histo', nbinsx=100, xlow=0, xup=500)
-    h3 = r.TCanvas()
-    for i in range(len(eventjets)):
-         try:
-              g3.Fill(eventjets[i][1].M())
-         except:
-              continue
-    g3.SetLineColor(r.kGreen)
-    g3.SetTitle("Sublead Jet Mass")
-    h3.SetLogy()
-    g3.Draw()
-    h3.Draw()
-#    h3.SaveAs('subleadjetMass.png')
-
-############################################
+###
+###    a1 = r.TH1F(name="a1", title='my histo', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
+###    c1 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         for j in range(len(eventjets[i])):
+###              a1.Fill(eventjets[i][j].Pt())
+###    a1.SetLineColor(r.kBlue)
+###    a1.SetTitle("Full Jet p_{T}")
+###    c1.SetLogy()
+###    a1.Draw()
+###    c1.Draw()
+###    c1.SaveAs('fulljetPt.png')
+###
+###    a2 = r.TH1F(name="a2", title='my histo', nbinsx=100, xlow=-100, xup=2000)
+###    c2 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         a2.Fill(eventjets[i][0].Pt())
+###    a2.SetLineColor(r.kRed)
+###    a2.SetTitle("Lead Jet p_{T}")
+###    c2.SetLogy()
+###    a2.Draw()
+###    c2.Draw()
+###    c2.SaveAs('leadjetPt.png')
+###
+###    a3 = r.TH1F(name="a3", title='my histo', nbinsx=100, xlow=-100, xup=2000)
+###    c3 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         try:
+###              a3.Fill(eventjets[i][1].Pt())
+###         except:
+###              continue
+###    a3.SetLineColor(r.kGreen)
+###    a3.SetTitle("Sublead Jet p_{T}")
+###    c3.SetLogy()
+###    a3.Draw()
+###    c3.Draw()
+###    c3.SaveAs('subleadjetPt.png')
+###
+###    b1 = r.TH1F(name="b1", title='my histo', nbinsx=100, xlow=-5, xup=5) # Eta Plots
+###    d1 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         for j in range(len(eventjets[i])):
+###              b1.Fill(eventjets[i][j].Eta())
+###    b1.SetLineColor(r.kBlue) # Graphing Eta Plots
+###    b1.SetTitle("Full Jet #eta")
+###    d1.SetLogy()
+###    b1.Draw()
+###    d1.Draw()
+###    d1.SaveAs('fulljetEta.png')
+###
+###    b2 = r.TH1F(name="b2", title='my histo', nbinsx=100, xlow=-5, xup=5)
+###    d2 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         b2.Fill(eventjets[i][0].Eta())
+###    b2.SetLineColor(r.kRed)
+###    b2.SetTitle("Lead Jet #eta")
+###    d2.SetLogy()
+###    b2.Draw()
+###    d2.Draw()
+###    d2.SaveAs('leadjetEta.png')
+###
+###    b3 = r.TH1F(name="b3", title='my histo', nbinsx=100, xlow=-5, xup=5)
+###    d3 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         try:
+###              b3.Fill(eventjets[i][1].Eta())
+###         except:
+###              continue
+###    b3.SetLineColor(r.kGreen)
+###    b3.SetTitle("Sublead Jet #eta")
+###    d3.SetLogy()
+###    b3.Draw()
+###    d3.Draw()
+###    d3.SaveAs('subleadjetEta.png')
+###
+###    e1 = r.TH1F(name="e1", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
+###    f1 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         for j in range(len(eventjets[i])):
+###              e1.Fill(eventjets[i][j].Phi())
+###    e1.SetLineColor(r.kBlue) # Graphing Phi Plots
+###    e1.SetTitle("Full Jet #Phi")
+###    e1.Draw()
+###    f1.Draw()
+###    f1.SaveAs('fulljetPhi.png')
+###
+###    e2 = r.TH1F(name="e2", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5)
+###    f2 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         e2.Fill(eventjets[i][0].Phi())
+###    e2.SetLineColor(r.kRed)
+###    e2.SetTitle("Lead Jet #Phi")
+###    e2.Draw()
+###    f2.Draw()
+###    f2.SaveAs('leadjetPhi.png')
+###
+###    e3 = r.TH1F(name="e3", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5)
+###    f3 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         try:
+###              e3.Fill(eventjets[i][1].Phi())
+###         except:
+###              continue
+###    e3.SetLineColor(r.kGreen)
+###    e3.SetTitle("Sublead Jet #Phi")
+###    e3.Draw()
+###    f3.Draw()
+###    f3.SaveAs('subleadjetPhi.png')
+###    
+###    g1 = r.TH1F(name="g1", title='my histo', nbinsx=100, xlow=0, xup=500) # Mass Plots
+###    h1 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         for j in range(len(eventjets[i])):
+###              g1.Fill(eventjets[i][j].M())
+###    g1.SetLineColor(r.kBlue) # Graphing Mass Plots
+###    g1.SetTitle("Full Jet Mass")
+###    h1.SetLogy()
+###    g1.Draw()
+###    h1.Draw()
+###    h1.SaveAs('fulljetMass.png')
+###
+###    g2 = r.TH1F(name="g2", title='my histo', nbinsx=100, xlow=0, xup=500)
+###    h2 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         g2.Fill(eventjets[i][0].M())
+###    g2.SetLineColor(r.kRed)
+###    g2.SetTitle("Lead Jet Mass")
+###    h2.SetLogy()
+###    g2.Draw()
+###    h2.Draw()
+###    h2.SaveAs('leadjetMass.png')
+###
+###    g3 = r.TH1F(name="g3", title='my histo', nbinsx=100, xlow=0, xup=500)
+###    h3 = r.TCanvas()
+###    for i in range(len(eventjets)):
+###         try:
+###              g3.Fill(eventjets[i][1].M())
+###         except:
+###              continue
+###    g3.SetLineColor(r.kGreen)
+###    g3.SetTitle("Sublead Jet Mass")
+###    h3.SetLogy()
+###    g3.Draw()
+###    h3.Draw()
+###    h3.SaveAs('subleadjetMass.png')
+###
+###############################################
 
 
 if __name__ == "__main__":
@@ -466,7 +499,6 @@ if __name__ == "__main__":
      parser.add_argument("ptCut", type=float, help="pT cut applied to individual jets")
      parser.add_argument("trainPercent", type=int, help="fraction (in perecent) of training data (0-100)")
      parser.add_argument("usePuppi", type=bool, help="candidate type (0 for PF, 1 for PUPPI)")
-     parser.add_argument('numEvents', type=int)
 
      args = parser.parse_args()
 
