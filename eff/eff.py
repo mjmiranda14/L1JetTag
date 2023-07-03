@@ -88,7 +88,8 @@ def main(args):
     print("Beginning Jet Construction")
     start = time.time()
 #    pbar = tqdm.tqdm(range(int(eventNum))
-    pbar = tqdm.tqdm(range(int(5000)))    
+    numEvents = args.numEvents
+    pbar = tqdm.tqdm(range(int(numEvents)))    
     missedSignalParts = 0
     signalParts = 0
     for entryNum in pbar:
@@ -282,20 +283,31 @@ def main(args):
     end = time.time() # timing
     print(f'Elapsed Time: {str(end - start)}')
 
-    print(f'Length of eventjets = {len(eventjets)}')
-#    print(f'Length of nested list = {len(eventjets[0])}')
+#    print(f'Length of eventjets = {len(eventjets)}')
+#    print(f'Length of nested list for last event = {len(eventjets[len(eventjets)-1])}')
+     
+    twojetevents = []
+    onejetevents = []
+    zerojetevents = []
     for i in range(len(eventjets)):
-         if len(eventjets) <= 2:
-              print(f'Event {i} has less than or equal to 2 jets')
+        if len(eventjets[i]) == 2:
+             twojetevents.append(i)
+        elif len(eventjets[i]) == 1:
+             onejetevents.append(i)
+        elif len(eventjets[i]) == 0:
+             zerojetevents.append(i)
+    print(f'The events with 0 jets are: {zerojetevents}')     
+    print(f'The events with 1 jet are: {onejetevents}')
+#    print(f'\nAnd the events with 2 jets are: {twojetevents}')
 
-    print(f'eventjets[0][0].Phi() = {eventjets[0][0].Phi()}')
-    print(f'eventjets[0][1].Phi() = {eventjets[0][1].Phi()}')
-    print(f'eventjets[{len(eventjets)-1}][0].Phi() = {eventjets[len(eventjets)-1][0].Phi()}')
-    print(f'eventjets[{len(eventjets)-1}][1].Phi() = {eventjets[len(eventjets)-1][1].Phi()}')
+#    print(f'eventjets[0][0].Pt() = {eventjets[0][0].Pt()}')
+#    print(f'eventjets[0][1].Pt() = {eventjets[0][1].Pt()}')
+#    print(f'eventjets[{len(eventjets)-1}][0].Pt() = {eventjets[len(eventjets)-1][0].Pt()}')
+#    print(f'eventjets[{len(eventjets)-1}][1].Pt() = {eventjets[len(eventjets)-1][1].Pt()}')
 
 #    for i in range(len(eventjets)):
 #         if i >= (len(eventjets) - 5):
-#              print(eventjets[i][1].Phi())
+#             print(eventjets[i][1].Pt())
     
 
     a1 = r.TH1F(name="a1", title='my histo', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
@@ -308,7 +320,7 @@ def main(args):
     c1.SetLogy()
     a1.Draw()
     c1.Draw()
-    c1.SaveAs('fulljetPt.png')
+#    c1.SaveAs('fulljetPt.png')
 
     a2 = r.TH1F(name="a2", title='my histo', nbinsx=100, xlow=-100, xup=2000)
     c2 = r.TCanvas()
@@ -319,8 +331,9 @@ def main(args):
     c2.SetLogy()
     a2.Draw()
     c2.Draw()
-    c2.SaveAs('leadjetPt.png')
+#    c2.SaveAs('leadjetPt.png')
 
+## anything numEvents >= 2540 throws a 'IndexError: list index out of range' for the subleadjets ##
     a3 = r.TH1F(name="a3", title='my histo', nbinsx=100, xlow=-100, xup=2000)
     c3 = r.TCanvas()
     for i in range(len(eventjets)):
@@ -333,7 +346,7 @@ def main(args):
     c3.SetLogy()
     a3.Draw()
     c3.Draw()
-    c3.SaveAs('subleadjetPt.png')
+#    c3.SaveAs('subleadjetPt.png')
 
     b1 = r.TH1F(name="b1", title='my histo', nbinsx=100, xlow=-5, xup=5) # Eta Plots
     d1 = r.TCanvas()
@@ -345,7 +358,7 @@ def main(args):
     d1.SetLogy()
     b1.Draw()
     d1.Draw()
-    d1.SaveAs('fulljetEta.png')
+#    d1.SaveAs('fulljetEta.png')
 
     b2 = r.TH1F(name="b2", title='my histo', nbinsx=100, xlow=-5, xup=5)
     d2 = r.TCanvas()
@@ -356,7 +369,7 @@ def main(args):
     d2.SetLogy()
     b2.Draw()
     d2.Draw()
-    d2.SaveAs('leadjetEta.png')
+#    d2.SaveAs('leadjetEta.png')
 
     b3 = r.TH1F(name="b3", title='my histo', nbinsx=100, xlow=-5, xup=5)
     d3 = r.TCanvas()
@@ -370,7 +383,7 @@ def main(args):
     d3.SetLogy()
     b3.Draw()
     d3.Draw()
-    d3.SaveAs('subleadjetEta.png')
+#    d3.SaveAs('subleadjetEta.png')
 
     e1 = r.TH1F(name="e1", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
     f1 = r.TCanvas()
@@ -381,7 +394,7 @@ def main(args):
     e1.SetTitle("Full Jet #Phi")
     e1.Draw()
     f1.Draw()
-    f1.SaveAs('fulljetPhi.png')
+#    f1.SaveAs('fulljetPhi.png')
 
     e2 = r.TH1F(name="e2", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5)
     f2 = r.TCanvas()
@@ -391,7 +404,7 @@ def main(args):
     e2.SetTitle("Lead Jet #Phi")
     e2.Draw()
     f2.Draw()
-    f2.SaveAs('leadjetPhi.png')
+#    f2.SaveAs('leadjetPhi.png')
 
     e3 = r.TH1F(name="e3", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5)
     f3 = r.TCanvas()
@@ -404,7 +417,7 @@ def main(args):
     e3.SetTitle("Sublead Jet #Phi")
     e3.Draw()
     f3.Draw()
-    f3.SaveAs('subleadjetPhi.png')
+#    f3.SaveAs('subleadjetPhi.png')
     
     g1 = r.TH1F(name="g1", title='my histo', nbinsx=100, xlow=0, xup=500) # Mass Plots
     h1 = r.TCanvas()
@@ -416,7 +429,7 @@ def main(args):
     h1.SetLogy()
     g1.Draw()
     h1.Draw()
-    h1.SaveAs('fulljetMass.png')
+#    h1.SaveAs('fulljetMass.png')
 
     g2 = r.TH1F(name="g2", title='my histo', nbinsx=100, xlow=0, xup=500)
     h2 = r.TCanvas()
@@ -427,7 +440,7 @@ def main(args):
     h2.SetLogy()
     g2.Draw()
     h2.Draw()
-    h2.SaveAs('leadjetMass.png')
+#    h2.SaveAs('leadjetMass.png')
 
     g3 = r.TH1F(name="g3", title='my histo', nbinsx=100, xlow=0, xup=500)
     h3 = r.TCanvas()
@@ -441,7 +454,7 @@ def main(args):
     h3.SetLogy()
     g3.Draw()
     h3.Draw()
-    h3.SaveAs('subleadjetMass.png')
+#    h3.SaveAs('subleadjetMass.png')
 
 ############################################
 
@@ -453,6 +466,7 @@ if __name__ == "__main__":
      parser.add_argument("ptCut", type=float, help="pT cut applied to individual jets")
      parser.add_argument("trainPercent", type=int, help="fraction (in perecent) of training data (0-100)")
      parser.add_argument("usePuppi", type=bool, help="candidate type (0 for PF, 1 for PUPPI)")
+     parser.add_argument('numEvents', type=int)
 
      args = parser.parse_args()
 
