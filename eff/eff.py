@@ -102,7 +102,7 @@ def tripleJet(inputlist, ptVal1, ptVal2, ptVal3, etaVal):
      print(f'The effic of triple jets with pT > {ptVal1}, {ptVal2}, {ptVal3}; two jets pT > {ptVal2}, {ptVal3} and |\u03B7| < {etaVal} is {num / len(inputlist)} over {len(inputlist)} events')         
 
 
-#######################################
+################################################################################
 
 def main(args):
 
@@ -149,6 +149,9 @@ def main(args):
     h_LeadEta =    r.TH1F(name="h_LeadEta", title='h_LeadEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
     h_SubLeadEta = r.TH1F(name="h_SubLeadEta", title='h_SubLeadEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
     h_AllEta =     r.TH1F(name="h_AllEta", title='h_AllEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
+    h_LeadMass =    r.TH1F(name="h_LeadMass", title='h_LeadMass', nbinsx=100, xlow=0, xup=500) # Mass Plots
+    h_SubLeadMass = r.TH1F(name="h_SubLeadMass", title='h_SubLeadMass', nbinsx=100, xlow=0, xup=500) # Mass Plots
+    h_AllMass =     r.TH1F(name="h_AllMass", title='h_AllMass', nbinsx=100, xlow=0, xup=500) # Mass Plots
     start = time.time()
 
    
@@ -266,6 +269,7 @@ def main(args):
                 h_AllPt.Fill(tempTLV.Pt())
                 h_AllPhi.Fill(tempTLV.Phi())
                 h_AllEta.Fill(tempTLV.Eta())
+                h_AllMass.Fill(tempTLV.M())
                 jetlist.append(tempTLV)
                 jetNum +=1
 
@@ -273,6 +277,7 @@ def main(args):
              h_LeadPt.Fill(jetlist[0].Pt())
              h_LeadPhi.Fill(jetlist[0].Phi())
              h_LeadEta.Fill(jetlist[0].Eta())
+             h_LeadMass.Fill(jetlist[0].M())
         #print("eventNum: ",entryNum, "     NJets: ",jetNum, "    len(jetlist): ", len(jetlist))
         #print("Jet 0: ", jetlist[0].Pt(),jetlist[0].Eta(), jetlist[0].Phi())
         #print("Jet 1: ", jetlist[1].Pt(),jetlist[1].Eta(), jetlist[1].Phi())        
@@ -281,7 +286,7 @@ def main(args):
            h_SubLeadPt.Fill(jetlist[1].Pt())
            h_SubLeadPhi.Fill(jetlist[1].Phi())
            h_SubLeadEta.Fill(jetlist[1].Eta())
-           #print(entryNum)
+           h_SubLeadMass.Fill(jetlist[1].M())
         eventjets.append(jetlist)            
 
     c = r.TCanvas()
@@ -349,6 +354,27 @@ def main(args):
     h_AllPt.Draw()
     c.Draw()
 #    c.SaveAs('h_AllPt.png')
+    c.Clear()
+   
+    h_LeadMass.SetLineColor(r.kBlue)
+    h_LeadMass.SetTitle("Lead Jet Mass")
+    h_LeadMass.Draw()
+    c.Draw()
+#    c.SaveAs('h_LeadMass.png')
+    c.Clear()
+
+    h_SubLeadMass.SetLineColor(r.kBlue)
+    h_SubLeadMass.SetTitle("Sub-Lead Jet Mass")
+    h_SubLeadMass.Draw()
+    c.Draw()
+#    c.SaveAs('h_SubLeadMass.png')
+    c.Clear()
+
+    h_AllMass.SetLineColor(r.kBlue)
+    h_AllMass.SetTitle("All Jets Mass")
+    h_AllMass.Draw()
+    c.Draw()
+#    c.SaveAs('h_AllMass.png')
     c.Clear()
 
 
