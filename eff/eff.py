@@ -1,11 +1,9 @@
 import argparse
 import time
-import h5py
 import numpy as np
 import ROOT as r
 import tqdm
 
-#inFileName = "root://cmseos.fnal.gov///store/user/mequinna/file4russell_2.root"
 
 SIGNAL_PDG_ID = 1000006
 MAX_ETA = 2.3
@@ -16,12 +14,97 @@ DELTA_R_MATCH = 0.4
 
 r.gROOT.SetBatch(1)
 
+## Unicode Shortcuts
+# phi = \u03A6
+# eta = \u03B7
+# delta = \u0394
+
+## Effic Functions
+def singleJetEffic(inputlist, thold):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) > 0:
+               for j in range(len(ver[i])):
+                    if ver[i][j].Pt() > thold:
+                         num += 1
+                         break
+     print(f'The effic of single jets with pT > {thold} is {num / len(ver)} over {len(ver)} events')
+
+def doubleJetEffic(inputlist, ptVal, etaVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) >= 2:
+               for j in range(len(ver[i])):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < etaVal):
+                         for k in range(len(ver[i])):
+                              if (k!=j) and (ver[i][k].Pt() > ptVal) and (abs(ver[i][k].Eta()) < etaVal):
+                                   num += 1
+                                   break
+                         break     
+     print(f'The effic of double jets with pT > {ptVal} and |\u03B7| < {etaVal} is {num / len(inputlist)} over {len(inputlist)} events')
+
+def doubleJetdeltaEtaEffic(inputlist, ptVal, etaVal, deltaEta):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) >= 2:
+               for j in range(len(ver[i])):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < etaVal):
+                         for k in range(len(ver[i])):
+                              if (k!=j) and (ver[i][k].Pt() > ptVal) and (abs(ver[i][k].Eta()) < etaVal) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < deltaEta):
+                                   num += 1
+                                   break
+                         break
+     print(f'The effic of double jets + \u0394\u03B7 with pT > {ptVal} and |\u03B7| < {etaVal} and \u0394\u03B7 < {deltaEta} is {num / len(inputlist)} over {len(inputlist)} events')
+
+def doubleJetMassEffic(inputlist, ptVal1, ptVal2, massVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() >= ptVal1):
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= ptVal2) and ((ver[i][j].M2() + ver[i][k].M2()) > massVal) and (k!=j):
+                              num += 1
+                              break
+                    break
+     print(f'The effic of double jets + mass with pT > {ptVal1}, {ptVal2}; two jets pT > {ptVal2} and M_jj > {massVal} is {num / len(inputlist)} over {len(inputlist)} events')
+
+def doubleJetMass2Effic(inputlist, ptVal, etaVal, deltaEta, massVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() >= ptVal) and (abs(ver[i][j].Eta()) < etaVal):
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < etaVal) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < deltaEta) and ((ver[i][j].M2() + ver[i][k].M2()) > massVal) and (k!=j):
+                              num += 1
+                              break
+                    break
+     print(f'The effic of double jets + mass with pT > {ptVal} and |\u03B7| < {etaVal} and \u0394\u03B7 < {deltaEta} and M_jj > {massVal} is {num / len(inputlist)} over {len(inputlist)} events')
+
+def tripleJet(inputlist, ptVal1, ptVal2, ptVal3, etaVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if ver[i][j].Pt() >= ptVal1:
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= ptVal2) and (abs(ver[i][k].Eta()) < etaVal) and (k!=j):
+                              for m in range(len(ver[i])):
+                                   if (ver[i][m].Pt() >= ptVal3) and (abs(ver[i][k].Eta()) < etaVal) and (m!=k) and (m!=j):
+                                        num += 1
+                                        break
+                              break
+                    break
+     print(f'The effic of triple jets with pT > {ptVal1}, {ptVal2}, {ptVal3}; two jets pT > {ptVal2}, {ptVal3} and |\u03B7| < {etaVal} is {num / len(inputlist)} over {len(inputlist)} events')         
+
+
+#######################################
 
 def main(args):
-    #tag = "QCD"
-    #ptCut = 200
-    #trainPercent = 50
-    #usePuppi = 0
 
     inFileName = args.inFileName
     print("Reading from " + inFileName)
@@ -33,7 +116,6 @@ def main(args):
 
     # Load variables based on inputs and initialize lists to be used later
     eventNum = tree.GetEntries()
-    ptCut = args.ptCut
     jetNum = 0
     signalPartCount = 0
     jetPartList = []
@@ -54,11 +136,7 @@ def main(args):
     signalPartArray = []
     missedSignalPartArray = []
     partType = []
-
-###########################        
     eventjets = []
-
-
 
 ##########################################
     print("Beginning Jet Construction")
@@ -72,8 +150,10 @@ def main(args):
     h_SubLeadEta = r.TH1F(name="h_SubLeadEta", title='h_SubLeadEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
     h_AllEta =     r.TH1F(name="h_AllEta", title='h_AllEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
     start = time.time()
-#    pbar = tqdm.tqdm(range(int(eventNum))
-    pbar = tqdm.tqdm(range(int(10000)))    
+
+   
+    numofevents = args.numofevents
+    pbar = tqdm.tqdm(range(int(numofevents)))    
     missedSignalParts = 0
     signalParts = 0
     for entryNum in pbar:
@@ -162,21 +242,7 @@ def main(args):
                             )
                         jetPartList.extend(partFts)  # Add particle features to particle list
                         bannedParts.append(j)  # Mark this particle as unavailable for other jets
-               #     if (
-               #         len(jetPartList) >= N_PART_PER_JET * N_FEAT
-               #     ):  # If you reach 10 particles in one jet, break and move on
-               #         break
-               # if abs(tempTLV.Pt()) < ptCut:  # Neglect to save jet if it falls below pT Cut
-               #     break
-               # # Scaling particle pT, Eta, and Phi based on jet pT, Eta, and Phi
-               # c = N_PART_PER_JET + 1
-               # while c < len(jetPartList) - 2:
-                   # jetPartList[c] = jetPartList[c] / tempTLV.Pt()
-                   # jetPartList[c + 1] = tempTLV.Eta() - jetPartList[c + 1]
-                   # tempPhi = jetPartList[c + 2]
-                   # jetPartList[c + 2] = signedDeltaPhi(tempTLV.Phi(), tempPhi)
-                   #  c += N_FEAT
-                # Ensure all inputs are same length
+               # Ensure all inputs are same length
                 while len(jetPartList) < N_PART_PER_JET * N_FEAT:
                     jetPartList.append(0)
                 # Add in final value to indicate if particle is matched (1) or unmatched (0)
@@ -203,10 +269,10 @@ def main(args):
                 jetlist.append(tempTLV)
                 jetNum +=1
 
-
-        h_LeadPt.Fill(jetlist[0].Pt())
-        h_LeadPhi.Fill(jetlist[0].Phi())
-        h_LeadEta.Fill(jetlist[0].Eta())
+        if (len(jetlist)>0):
+             h_LeadPt.Fill(jetlist[0].Pt())
+             h_LeadPhi.Fill(jetlist[0].Phi())
+             h_LeadEta.Fill(jetlist[0].Eta())
         #print("eventNum: ",entryNum, "     NJets: ",jetNum, "    len(jetlist): ", len(jetlist))
         #print("Jet 0: ", jetlist[0].Pt(),jetlist[0].Eta(), jetlist[0].Phi())
         #print("Jet 1: ", jetlist[1].Pt(),jetlist[1].Eta(), jetlist[1].Phi())        
@@ -224,42 +290,42 @@ def main(args):
     h_LeadPhi.SetTitle("Lead Jet #phi")
     h_LeadPhi.Draw()
     c.Draw()
-    c.SaveAs('h_LeadPhi.png')
+#    c.SaveAs('h_LeadPhi.png')
     c.Clear()
 
     h_SubLeadPhi.SetLineColor(r.kBlue)
     h_SubLeadPhi.SetTitle("Sub-Lead Jet #phi")
     h_SubLeadPhi.Draw()
     c.Draw()
-    c.SaveAs('h_SubLeadPhi.png')
+#    c.SaveAs('h_SubLeadPhi.png')
     c.Clear()
 
     h_AllPhi.SetLineColor(r.kBlue)
     h_AllPhi.SetTitle("All Jets #phi")
     h_AllPhi.Draw()
     c.Draw()
-    c.SaveAs('h_AllPhi.png')
+#    c.SaveAs('h_AllPhi.png')
     c.Clear()
 
     h_LeadEta.SetLineColor(r.kBlue)
     h_LeadEta.SetTitle("Lead Jet #eta")
     h_LeadEta.Draw()
     c.Draw()
-    c.SaveAs('h_LeadEta.png')
+#    c.SaveAs('h_LeadEta.png')
     c.Clear()
 
     h_SubLeadEta.SetLineColor(r.kBlue)
     h_SubLeadEta.SetTitle("Sub-Lead Jet #eta")
     h_SubLeadEta.Draw()
     c.Draw()
-    c.SaveAs('h_SubLeadEta.png')
+#    c.SaveAs('h_SubLeadEta.png')
     c.Clear()
 
     h_AllEta.SetLineColor(r.kBlue)
     h_AllEta.SetTitle("All Jets #eta")
     h_AllEta.Draw()
     c.Draw()
-    c.SaveAs('h_AllEta.png')
+#    c.SaveAs('h_AllEta.png')
     c.Clear()
 
     c.SetLogy()
@@ -268,238 +334,70 @@ def main(args):
     h_LeadPt.SetTitle("Lead Jet p_{T}")
     h_LeadPt.Draw()
     c.Draw()
-    c.SaveAs('h_LeadPt.png')
+#    c.SaveAs('h_LeadPt.png')
     c.Clear()
 
     h_SubLeadPt.SetLineColor(r.kBlue)
     h_SubLeadPt.SetTitle("Sub-Lead Jet p_{T}")
     h_SubLeadPt.Draw()
     c.Draw()
-    c.SaveAs('h_SubLeadPt.png')
+#    c.SaveAs('h_SubLeadPt.png')
     c.Clear()
 
     h_AllPt.SetLineColor(r.kBlue)
     h_AllPt.SetTitle("All Jets p_{T}")
     h_AllPt.Draw()
     c.Draw()
-    c.SaveAs('h_AllPt.png')
+#    c.SaveAs('h_AllPt.png')
     c.Clear()
-#    # Break dataset into training/testing data based on train/test split input
-#    splitIndex = int(float(args.trainPercent) / 100 * len(jetPartsArray))
-#    trainArray = jetPartsArray[:splitIndex]
-#    trainingFullData = jetDataArray[:splitIndex]
 
-#    testArray = jetPartsArray[splitIndex:]
-#    jetFullData = jetDataArray[splitIndex:]
 
-#    print("Total Jets " + str(len(jetPartsArray)))
-#    print("Total No. of Matched Jets: " + str(signalPartCount))
-#    print("No. of Jets in Training Data: " + str(len(trainArray)))
-#    print("No. of Jets in Testing Data: " + str(len(testArray)))
-#    print("No. of missed signal particles during reconstruction: " + str(missedSignalParts))
-#    print("Total No. of signal particles: " + str(signalParts))
-
-#    # Final Check
-#    print("Debug that everything matches up in length")
-#    assert len(testArray) == len(jetFullData) and len(trainArray) == len(trainingFullData)
-
-#    # Save datasets as h5 files	
-    
-#    # Testing Data: Particle Inputs for each jet of Shape [...,141]
-#    with h5py.File("testingData" + str(args.tag) + ".h5", "w") as hf:
-#        hf.create_dataset("Testing Data", data=testArray)
-#    # Jet Data: Jet Features (pT, Eta, Phi, Mass) of each testing data jet of shape [...,4]
-#    with h5py.File("jetData" + str(args.tag) + ".h5", "w") as hf:
-#        hf.create_dataset("Jet Data", data=jetFullData)
-#    # Training Data: Particle Inputs for each jet of Shape [...,141]
-#    with h5py.File("trainingData" + str(args.tag) + ".h5", "w") as hf:
-#        hf.create_dataset("Training Data", data=trainArray)
-#    # Sample Data: Jet Features (pT, Eta, Phi, Mass) of each training data jet of shape [...,4]
-#    with h5py.File("sampleData" + str(args.tag) + ".h5", "w") as hf: 
-#        hf.create_dataset("Sample Data", data=trainingFullData)
-#    with h5py.File("signalPartsData" + str(args.tag) +".h5", "w") as hf: 
-#        hf.create_dataset("Data", data=signalPartArray)
-#    with h5py.File("missedSignalPartsData"+ str(args.tag) + ".h5", "w") as hf: 
-#        hf.create_dataset("Data", data=missedSignalPartArray)
-#    with h5py.File("ParticleTypes" + str(args.tag) + ".h5", "w") as hf: 
-#        hf.create_dataset("pdgID", data=partType)
-
-#################MyCode#####################
+  
     end = time.time() # timing
     print(f'Elapsed Time: {str(end - start)}')
 
     print(f'Length of eventjets = {len(eventjets)}')
-#    print(f'Length of nested list = {len(eventjets[0])}')
-    for i in range(len(eventjets)):
-         if len(eventjets) <= 2:
-              print(f'Event {i} has less than or equal to 2 jets')
 
-    print(f'eventjets[0][0].Phi() = {eventjets[0][0].Phi()}')
-    print(f'eventjets[0][1].Phi() = {eventjets[0][1].Phi()}')
-    print(f'eventjets[{len(eventjets)-1}][0].Phi() = {eventjets[len(eventjets)-1][0].Phi()}')
-    print(f'eventjets[{len(eventjets)-1}][1].Phi() = {eventjets[len(eventjets)-1][1].Phi()}')
+#    print(f'Length of nested list = {len(eventjets[0])}')
+#    for i in range(len(eventjets)):
+#         if len(eventjets) <= 2:
+#              print(f'Event {i} has less than or equal to 2 jets')
+
+#    print(f'eventjets[0][0].Phi() = {eventjets[0][0].Phi()}')
+#    print(f'eventjets[0][1].Phi() = {eventjets[0][1].Phi()}')
+#    print(f'eventjets[{len(eventjets)-1}][0].Phi() = {eventjets[len(eventjets)-1][0].Phi()}')
+#    print(f'eventjets[{len(eventjets)-1}][1].Phi() = {eventjets[len(eventjets)-1][1].Phi()}')
 
 #    for i in range(len(eventjets)):
 #         if i >= (len(eventjets) - 5):
 #              print(eventjets[i][1].Phi())
-    
-###
-###    a1 = r.TH1F(name="a1", title='my histo', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
-###    c1 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         for j in range(len(eventjets[i])):
-###              a1.Fill(eventjets[i][j].Pt())
-###    a1.SetLineColor(r.kBlue)
-###    a1.SetTitle("Full Jet p_{T}")
-###    c1.SetLogy()
-###    a1.Draw()
-###    c1.Draw()
-###    c1.SaveAs('fulljetPt.png')
-###
-###    a2 = r.TH1F(name="a2", title='my histo', nbinsx=100, xlow=-100, xup=2000)
-###    c2 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         a2.Fill(eventjets[i][0].Pt())
-###    a2.SetLineColor(r.kRed)
-###    a2.SetTitle("Lead Jet p_{T}")
-###    c2.SetLogy()
-###    a2.Draw()
-###    c2.Draw()
-###    c2.SaveAs('leadjetPt.png')
-###
-###    a3 = r.TH1F(name="a3", title='my histo', nbinsx=100, xlow=-100, xup=2000)
-###    c3 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         try:
-###              a3.Fill(eventjets[i][1].Pt())
-###         except:
-###              continue
-###    a3.SetLineColor(r.kGreen)
-###    a3.SetTitle("Sublead Jet p_{T}")
-###    c3.SetLogy()
-###    a3.Draw()
-###    c3.Draw()
-###    c3.SaveAs('subleadjetPt.png')
-###
-###    b1 = r.TH1F(name="b1", title='my histo', nbinsx=100, xlow=-5, xup=5) # Eta Plots
-###    d1 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         for j in range(len(eventjets[i])):
-###              b1.Fill(eventjets[i][j].Eta())
-###    b1.SetLineColor(r.kBlue) # Graphing Eta Plots
-###    b1.SetTitle("Full Jet #eta")
-###    d1.SetLogy()
-###    b1.Draw()
-###    d1.Draw()
-###    d1.SaveAs('fulljetEta.png')
-###
-###    b2 = r.TH1F(name="b2", title='my histo', nbinsx=100, xlow=-5, xup=5)
-###    d2 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         b2.Fill(eventjets[i][0].Eta())
-###    b2.SetLineColor(r.kRed)
-###    b2.SetTitle("Lead Jet #eta")
-###    d2.SetLogy()
-###    b2.Draw()
-###    d2.Draw()
-###    d2.SaveAs('leadjetEta.png')
-###
-###    b3 = r.TH1F(name="b3", title='my histo', nbinsx=100, xlow=-5, xup=5)
-###    d3 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         try:
-###              b3.Fill(eventjets[i][1].Eta())
-###         except:
-###              continue
-###    b3.SetLineColor(r.kGreen)
-###    b3.SetTitle("Sublead Jet #eta")
-###    d3.SetLogy()
-###    b3.Draw()
-###    d3.Draw()
-###    d3.SaveAs('subleadjetEta.png')
-###
-###    e1 = r.TH1F(name="e1", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
-###    f1 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         for j in range(len(eventjets[i])):
-###              e1.Fill(eventjets[i][j].Phi())
-###    e1.SetLineColor(r.kBlue) # Graphing Phi Plots
-###    e1.SetTitle("Full Jet #Phi")
-###    e1.Draw()
-###    f1.Draw()
-###    f1.SaveAs('fulljetPhi.png')
-###
-###    e2 = r.TH1F(name="e2", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5)
-###    f2 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         e2.Fill(eventjets[i][0].Phi())
-###    e2.SetLineColor(r.kRed)
-###    e2.SetTitle("Lead Jet #Phi")
-###    e2.Draw()
-###    f2.Draw()
-###    f2.SaveAs('leadjetPhi.png')
-###
-###    e3 = r.TH1F(name="e3", title='my histo', nbinsx=100, xlow=-3.5, xup=3.5)
-###    f3 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         try:
-###              e3.Fill(eventjets[i][1].Phi())
-###         except:
-###              continue
-###    e3.SetLineColor(r.kGreen)
-###    e3.SetTitle("Sublead Jet #Phi")
-###    e3.Draw()
-###    f3.Draw()
-###    f3.SaveAs('subleadjetPhi.png')
-###    
-###    g1 = r.TH1F(name="g1", title='my histo', nbinsx=100, xlow=0, xup=500) # Mass Plots
-###    h1 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         for j in range(len(eventjets[i])):
-###              g1.Fill(eventjets[i][j].M())
-###    g1.SetLineColor(r.kBlue) # Graphing Mass Plots
-###    g1.SetTitle("Full Jet Mass")
-###    h1.SetLogy()
-###    g1.Draw()
-###    h1.Draw()
-###    h1.SaveAs('fulljetMass.png')
-###
-###    g2 = r.TH1F(name="g2", title='my histo', nbinsx=100, xlow=0, xup=500)
-###    h2 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         g2.Fill(eventjets[i][0].M())
-###    g2.SetLineColor(r.kRed)
-###    g2.SetTitle("Lead Jet Mass")
-###    h2.SetLogy()
-###    g2.Draw()
-###    h2.Draw()
-###    h2.SaveAs('leadjetMass.png')
-###
-###    g3 = r.TH1F(name="g3", title='my histo', nbinsx=100, xlow=0, xup=500)
-###    h3 = r.TCanvas()
-###    for i in range(len(eventjets)):
-###         try:
-###              g3.Fill(eventjets[i][1].M())
-###         except:
-###              continue
-###    g3.SetLineColor(r.kGreen)
-###    g3.SetTitle("Sublead Jet Mass")
-###    h3.SetLogy()
-###    g3.Draw()
-###    h3.Draw()
-###    h3.SaveAs('subleadjetMass.png')
-###
+
+    ## Calling Effic Functions
+    singleJetEffic(eventjets, 180)
+    doubleJetEffic(eventjets, 150, 2.5)
+    doubleJetdeltaEtaEffic(eventjets, 112, 2.3, 1.6)
+    doubleJetMassEffic(eventjets, 110, 35, 620)
+    doubleJetMass2Effic(eventjets, 30, 2.5, 1.5, 300)
+    tripleJet(eventjets, 95, 75, 65, 2.5)
+
+#    for i in range(len(eventjets)):
+#         for j in range(len(eventjets[i])):
+#              print(f'M = {eventjets[i][j].M()}, M2 = {eventjets[i][j].M2()}')
+#         print('\n')
+
+
+#    for i in range(len(eventjets)):
+#         for j in range(len(eventjets[i])):
+#              print(f'{eventjets[i][j].Pt()}, {eventjets[i][j].M())}')
+#         print('\n')
 ###############################################
 
 
 if __name__ == "__main__":
      parser = argparse.ArgumentParser(description="Process arguments")
      parser.add_argument("inFileName", type=str, help="input ROOT file name")
-     parser.add_argument("tag", type=str, help="data/file tag")
-     parser.add_argument("ptCut", type=float, help="pT cut applied to individual jets")
-     parser.add_argument("trainPercent", type=int, help="fraction (in perecent) of training data (0-100)")
      parser.add_argument("usePuppi", type=bool, help="candidate type (0 for PF, 1 for PUPPI)")
-
+     parser.add_argument('numofevents', type=int, help='number of input events')
      args = parser.parse_args()
 
      main(args)
