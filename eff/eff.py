@@ -66,7 +66,7 @@ def doubleJetMassEffic(inputlist, ptVal1, ptVal2, massVal):
           for j in range(len(ver[i])):
                if (ver[i][j].Pt() >= ptVal1):
                     for k in range(len(ver[i])):
-                         if (ver[i][k].Pt() >= ptVal2) and ((ver[i][j].M2() + ver[i][k].M2()) > massVal) and (k!=j):
+                         if (ver[i][k].Pt() >= ptVal2) and ((ver[i][j].M() + ver[i][k].M()) > massVal) and (k!=j):
                               num += 1
                               break
                     break
@@ -79,7 +79,7 @@ def doubleJetMass2Effic(inputlist, ptVal, etaVal, deltaEta, massVal):
           for j in range(len(ver[i])):
                if (ver[i][j].Pt() >= ptVal) and (abs(ver[i][j].Eta()) < etaVal):
                     for k in range(len(ver[i])):
-                         if (ver[i][k].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < etaVal) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < deltaEta) and ((ver[i][j].M2() + ver[i][k].M2()) > massVal) and (k!=j):
+                         if (ver[i][k].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < etaVal) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < deltaEta) and ((ver[i][j].M() + ver[i][k].M()) > massVal) and (k!=j):
                               num += 1
                               break
                     break
@@ -380,10 +380,13 @@ def main(args):
     doubleJetMass2Effic(eventjets, 30, 2.5, 1.5, 300)
     tripleJet(eventjets, 95, 75, 65, 2.5)
 
+#    print('\n')
+#    hit = 0
 #    for i in range(len(eventjets)):
 #         for j in range(len(eventjets[i])):
-#              print(f'M = {eventjets[i][j].M()}, M2 = {eventjets[i][j].M2()}')
-#         print('\n')
+#              if eventjets[i][j].M() >= 300:
+#                   hit += 1
+#    print(f'Number of single jet masses >= to 300 GeV: {hit}')
 
 
 #    for i in range(len(eventjets)):
