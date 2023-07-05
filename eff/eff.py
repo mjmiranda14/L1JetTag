@@ -21,13 +21,13 @@ r.gROOT.SetBatch(1)
 
 ## Effic Functions
 # Jet Triggers
-def singleJetEffic(inputlist, thold):
+def singleJetEffic(inputlist, ptVal):
      num = 0
      ver = inputlist
      for i in range(len(ver)):
           if len(ver[i]) > 0:
                for j in range(len(ver[i])):
-                    if ver[i][j].Pt() > thold:
+                    if ver[i][j].Pt() > ptVal:
                          num += 1
                          break
      print(f'The effic of single jets with pT > {thold} is {num / len(ver)} over {len(ver)} events')
@@ -337,42 +337,42 @@ def main(args):
     h_LeadPhi.SetTitle("Lead Jet #phi")
     h_LeadPhi.Draw()
     c.Draw()
-#    c.SaveAs('h_LeadPhi.png')
+    c.SaveAs('h_LeadPhi.png')
     c.Clear()
 
     h_SubLeadPhi.SetLineColor(r.kGreen)
     h_SubLeadPhi.SetTitle("Sub-Lead Jet #phi")
     h_SubLeadPhi.Draw()
     c.Draw()
-#    c.SaveAs('h_SubLeadPhi.png')
+    c.SaveAs('h_SubLeadPhi.png')
     c.Clear()
 
     h_AllPhi.SetLineColor(r.kBlue)
     h_AllPhi.SetTitle("All Jets #phi")
     h_AllPhi.Draw()
     c.Draw()
-#    c.SaveAs('h_AllPhi.png')
+    c.SaveAs('h_AllPhi.png')
     c.Clear()
 
     h_LeadEta.SetLineColor(r.kRed)
     h_LeadEta.SetTitle("Lead Jet #eta")
     h_LeadEta.Draw()
     c.Draw()
-#    c.SaveAs('h_LeadEta.png')
+    c.SaveAs('h_LeadEta.png')
     c.Clear()
 
     h_SubLeadEta.SetLineColor(r.kGreen)
     h_SubLeadEta.SetTitle("Sub-Lead Jet #eta")
     h_SubLeadEta.Draw()
     c.Draw()
-#    c.SaveAs('h_SubLeadEta.png')
+    c.SaveAs('h_SubLeadEta.png')
     c.Clear()
 
     h_AllEta.SetLineColor(r.kBlue)
     h_AllEta.SetTitle("All Jets #eta")
     h_AllEta.Draw()
     c.Draw()
-#    c.SaveAs('h_AllEta.png')
+    c.SaveAs('h_AllEta.png')
     c.Clear()
 
     c.SetLogy()
@@ -381,42 +381,42 @@ def main(args):
     h_LeadPt.SetTitle("Lead Jet p_{T}")
     h_LeadPt.Draw()
     c.Draw()
-#    c.SaveAs('h_LeadPt.png')
+    c.SaveAs('h_LeadPt.png')
     c.Clear()
 
     h_SubLeadPt.SetLineColor(r.kGreen)
     h_SubLeadPt.SetTitle("Sub-Lead Jet p_{T}")
     h_SubLeadPt.Draw()
     c.Draw()
-#    c.SaveAs('h_SubLeadPt.png')
+    c.SaveAs('h_SubLeadPt.png')
     c.Clear()
 
     h_AllPt.SetLineColor(r.kBlue)
     h_AllPt.SetTitle("All Jets p_{T}")
     h_AllPt.Draw()
     c.Draw()
-#    c.SaveAs('h_AllPt.png')
+    c.SaveAs('h_AllPt.png')
     c.Clear()
    
     h_LeadMass.SetLineColor(r.kRed)
     h_LeadMass.SetTitle("Lead Jet Mass")
     h_LeadMass.Draw()
     c.Draw()
-#    c.SaveAs('h_LeadMass.png')
+    c.SaveAs('h_LeadMass.png')
     c.Clear()
 
     h_SubLeadMass.SetLineColor(r.kGreen)
     h_SubLeadMass.SetTitle("Sub-Lead Jet Mass")
     h_SubLeadMass.Draw()
     c.Draw()
-#    c.SaveAs('h_SubLeadMass.png')
+    c.SaveAs('h_SubLeadMass.png')
     c.Clear()
 
     h_AllMass.SetLineColor(r.kBlue)
     h_AllMass.SetTitle("All Jets Mass")
     h_AllMass.Draw()
     c.Draw()
-#    c.SaveAs('h_AllMass.png')
+    c.SaveAs('h_AllMass.png')
     c.Clear()
 
 
