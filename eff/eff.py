@@ -20,6 +20,7 @@ r.gROOT.SetBatch(1)
 # delta = \u0394
 
 ## Effic Functions
+# Jet Triggers
 def singleJetEffic(inputlist, thold):
      num = 0
      ver = inputlist
@@ -101,6 +102,47 @@ def tripleJet(inputlist, ptVal1, ptVal2, ptVal3, etaVal):
                     break
      print(f'The effic of triple jets with pT > {ptVal1}, {ptVal2}, {ptVal3}; two jets pT > {ptVal2}, {ptVal3} and |\u03B7| < {etaVal} is {num / len(inputlist)} over {len(inputlist)} events')         
 
+# Energy Sum Triggers
+def EtmissEffic(inputlist, EVal, etaVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          vectorsumX = np.zeros(1, dtype=object)
+          vectorsumY = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (abs(ver[i][j].Eta()) < etaVal):
+                    vectorsumX[0] = vectorsumX[0] + ver[i][j].Px()
+                    vectorsumY[0] = vectorsumX[0] + ver[i][j].Px()
+          vectorsum = np.sqrt(vectorsumX[0]**2 + vectorsumY[0]**2)
+         # print(f'Vector sum = {vectorsum} for event {i}')
+          if (vectorsum > EVal):
+               num += 1
+     print(f'The effic of E_miss_t energy sum > {EVal} of jets with |\u03B7| < {etaVal} is {num / len(inputlist)} over {len(inputlist)} events')
+
+def HtEffic(inputlist, EVal, ptVal, etaVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          scalarsum = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < etaVal):
+                    scalarsum[0] = scalarsum[0] + ver[i][j].Pt()
+         # print(f'Scalar sum = {scalarsum} for event {i}')
+          if (scalarsum[0] > EVal):
+               num += 1
+     print(f'The effic of H_t energy sum > {EVal} of jets with pT > {ptVal} and |\u03B7| < {etaVal} is {num / len(inputlist)} over {len(inputlist)} events')
+
+def EtEffic(inputlist, EVal, etaVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          scalarsum = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (abs(ver[i][j].Eta()) < etaVal):
+                    scalarsum[0] = scalarsum[0] + ver[i][j].Pt()
+          if (scalarsum[0] > EVal):
+               num += 1
+     print(f'The effic of E_t energy sum > {EVal} of jets with |\u03B7| < {etaVal} is {num / len(inputlist)} over {len(inputlist)} events')
 
 ################################################################################
 
@@ -248,20 +290,20 @@ def main(args):
                # Ensure all inputs are same length
                 while len(jetPartList) < N_PART_PER_JET * N_FEAT:
                     jetPartList.append(0)
-                # Add in final value to indicate if particle is matched (1) or unmatched (0)
-                # to a gen signal particle by looking for gen signal particles within deltaR<0.4 of jet
-                jetPartList.append(0)
-                for e in range(len(tree.gen)):
-                    if (
-                        abs(tree.gen[e][1]) == SIGNAL_PDG_ID
-                        and (e not in bannedSignalParts)
-                        and abs(tree.gen[e][0].Eta()) < MAX_ETA
-                    ):
-                        if tree.gen[e][0].DeltaR(tempTLV) <= DELTA_R_MATCH:
-                            jetPartList[-1] = 1
-                            signalPartCount += 1
-                            bannedSignalParts.append(e)
-                            break
+#                # Add in final value to indicate if particle is matched (1) or unmatched (0)
+#                # to a gen signal particle by looking for gen signal particles within deltaR<0.4 of jet
+#                jetPartList.append(0)
+#                for e in range(len(tree.gen)):
+#                    if (
+#                        abs(tree.gen[e][1]) == SIGNAL_PDG_ID
+#                        and (e not in bannedSignalParts)
+#                        and abs(tree.gen[e][0].Eta()) < MAX_ETA
+#                    ):
+#                        if tree.gen[e][0].DeltaR(tempTLV) <= DELTA_R_MATCH:
+#                            jetPartList[-1] = 1
+#                            signalPartCount += 1
+#                            bannedSignalParts.append(e)
+#                            break
                 # Store particle inputs and jet features in overall list
                 jetPartsArray.append(jetPartList)
                 jetDataArray.append((tempTLV.Pt(), tempTLV.Eta(), tempTLV.Phi(), tempTLV.M(), jetPartList[-1]))
@@ -291,14 +333,14 @@ def main(args):
 
     c = r.TCanvas()
 
-    h_LeadPhi.SetLineColor(r.kBlue)
+    h_LeadPhi.SetLineColor(r.kRed)
     h_LeadPhi.SetTitle("Lead Jet #phi")
     h_LeadPhi.Draw()
     c.Draw()
 #    c.SaveAs('h_LeadPhi.png')
     c.Clear()
 
-    h_SubLeadPhi.SetLineColor(r.kBlue)
+    h_SubLeadPhi.SetLineColor(r.kGreen)
     h_SubLeadPhi.SetTitle("Sub-Lead Jet #phi")
     h_SubLeadPhi.Draw()
     c.Draw()
@@ -312,14 +354,14 @@ def main(args):
 #    c.SaveAs('h_AllPhi.png')
     c.Clear()
 
-    h_LeadEta.SetLineColor(r.kBlue)
+    h_LeadEta.SetLineColor(r.kRed)
     h_LeadEta.SetTitle("Lead Jet #eta")
     h_LeadEta.Draw()
     c.Draw()
 #    c.SaveAs('h_LeadEta.png')
     c.Clear()
 
-    h_SubLeadEta.SetLineColor(r.kBlue)
+    h_SubLeadEta.SetLineColor(r.kGreen)
     h_SubLeadEta.SetTitle("Sub-Lead Jet #eta")
     h_SubLeadEta.Draw()
     c.Draw()
@@ -335,14 +377,14 @@ def main(args):
 
     c.SetLogy()
 
-    h_LeadPt.SetLineColor(r.kBlue)
+    h_LeadPt.SetLineColor(r.kRed)
     h_LeadPt.SetTitle("Lead Jet p_{T}")
     h_LeadPt.Draw()
     c.Draw()
 #    c.SaveAs('h_LeadPt.png')
     c.Clear()
 
-    h_SubLeadPt.SetLineColor(r.kBlue)
+    h_SubLeadPt.SetLineColor(r.kGreen)
     h_SubLeadPt.SetTitle("Sub-Lead Jet p_{T}")
     h_SubLeadPt.Draw()
     c.Draw()
@@ -356,14 +398,14 @@ def main(args):
 #    c.SaveAs('h_AllPt.png')
     c.Clear()
    
-    h_LeadMass.SetLineColor(r.kBlue)
+    h_LeadMass.SetLineColor(r.kRed)
     h_LeadMass.SetTitle("Lead Jet Mass")
     h_LeadMass.Draw()
     c.Draw()
 #    c.SaveAs('h_LeadMass.png')
     c.Clear()
 
-    h_SubLeadMass.SetLineColor(r.kBlue)
+    h_SubLeadMass.SetLineColor(r.kGreen)
     h_SubLeadMass.SetTitle("Sub-Lead Jet Mass")
     h_SubLeadMass.Draw()
     c.Draw()
@@ -405,8 +447,22 @@ def main(args):
     doubleJetMassEffic(eventjets, 110, 35, 620)
     doubleJetMass2Effic(eventjets, 30, 2.5, 1.5, 300)
     tripleJet(eventjets, 95, 75, 65, 2.5)
+    EtmissEffic(eventjets, 100, 5.0)
+    HtEffic(eventjets, 360, 30, 2.5)
+    EtEffic(eventjets, 2000, 5.0)
+    
 
 #    print('\n')
+#    listofevents = []
+#    for i in range(len(eventjets)):
+#         sum = 0
+#         for j in range(len(eventjets[i])):
+#              if (eventjets[i][j].Pt() > 30) and (abs(eventjets[i][j].Eta()) < 2.5):
+#                   sum = sum + eventjets[i][j].Pt()
+#         print(f'jet candidate pT sum for event {i} = {sum}') 
+#         if sum < 360:
+#              listofevents.append((i))
+#    print(f'Number of events with Ht energy sum < 360: {len(listofevents)}') 
 #    hit = 0
 #    for i in range(len(eventjets)):
 #         for j in range(len(eventjets[i])):
@@ -417,7 +473,20 @@ def main(args):
 
 #    for i in range(len(eventjets)):
 #         for j in range(len(eventjets[i])):
-#              print(f'{eventjets[i][j].Pt()}, {eventjets[i][j].M())}')
+#              print(f'{eventjets[i][j].Pt()},{eventjets[i][j].Phi()},{eventjets[i][j].Eta()}')
+#         print('\n')
+#    for i in range(len(eventjets)):
+#         tree.GetEntry(i)
+#         for j in range(len(tree.l1jet)):
+#              print(f'{tree.l1jet[j][0].Pt()},{tree.l1jet[j][0].Phi()},{tree.l1jet[j][0].Eta()}')
+#         print('\n')
+#
+#    #Percent Error (if l1jets have already been created) of dataforge compared to w.e)
+#    print('\n')
+#    for i in range(len(eventjets)):
+#         tree.GetEntry(i)
+#         for j in range(len(tree.l1jet)):
+#              print(f'Pt %err = {(eventjets[i][j].Pt()-tree.l1jet[j][0].Pt())/eventjets[i][j].Pt()}; Phi %err = {(eventjets[i][j].Phi()-tree.l1jet[j][0].Phi())/eventjets[i][j].Phi()}; Eta %err = {(eventjets[i][j].Eta()-tree.l1jet[j][0].Eta())/eventjets[i][j].Eta()}')
 #         print('\n')
 ###############################################
 
