@@ -30,7 +30,7 @@ def singleJetEffic(inputlist, ptVal):
                     if ver[i][j].Pt() > ptVal:
                          num += 1
                          break
-     print(f'The effic of single jets with pT > {thold} is {num / len(ver)} over {len(ver)} events')
+     print(f'The effic of single jets with pT > {ptVal} is {num / len(ver)} over {len(ver)} events')
 
 def doubleJetEffic(inputlist, ptVal, etaVal):
      num = 0
