@@ -21,13 +21,13 @@ r.gROOT.SetBatch(1)
 
 ## Effic Functions
 # Jet Triggers
-def singleJetEffic(inputlist, ptVal):
+def singleJetEffic(inputlist, ptVal, etaVal):
      num = 0
      ver = inputlist
      for i in range(len(ver)):
           if len(ver[i]) > 0:
                for j in range(len(ver[i])):
-                    if ver[i][j].Pt() > ptVal:
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < etaVal):
                          num += 1
                          break
      print(f'The effic of single jets with pT > {ptVal} is {num / len(ver)} over {len(ver)} events')
@@ -40,7 +40,7 @@ def doubleJetEffic(inputlist, ptVal, etaVal):
                for j in range(len(ver[i])):
                     if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < etaVal):
                          for k in range(len(ver[i])):
-                              if (k!=j) and (ver[i][k].Pt() > ptVal) and (abs(ver[i][k].Eta()) < etaVal):
+                              if (k!=j) and (ver[i][k].Pt() > ptVal):
                                    num += 1
                                    break
                          break     
@@ -60,14 +60,14 @@ def doubleJetdeltaEtaEffic(inputlist, ptVal, etaVal, deltaEta):
                          break
      print(f'The effic of double jets + \u0394\u03B7 with pT > {ptVal} and |\u03B7| < {etaVal} and \u0394\u03B7 < {deltaEta} is {num / len(inputlist)} over {len(inputlist)} events')
 
-def doubleJetMassEffic(inputlist, ptVal1, ptVal2, massVal):
+def doubleJetMassEffic(inputlist, ptVal1, ptVal2, massVal, etaVal):
      num = 0
      ver = inputlist
      for i in range(len(ver)):
           for j in range(len(ver[i])):
-               if (ver[i][j].Pt() >= ptVal1):
+               if (ver[i][j].Pt() >= ptVal1) and (abs(ver[i][j].Eta()) < etaVal):
                     for k in range(len(ver[i])):
-                         if (ver[i][k].Pt() >= ptVal2) and ((ver[i][j].M() + ver[i][k].M()) > massVal) and (k!=j):
+                         if (ver[i][k].Pt() >= ptVal2) and ((ver[i][j].M() + ver[i][k].M()) > massVal) and (abs(ver[i][j].Eta()) < etaVal) and (k!=j):
                               num += 1
                               break
                     break
@@ -144,7 +144,248 @@ def EtEffic(inputlist, EVal, etaVal):
                num += 1
      print(f'The effic of E_t energy sum > {EVal} of jets with |\u03B7| < {etaVal} is {num / len(inputlist)} over {len(inputlist)} events')
 
-################################################################################
+## Effic Plotters
+def singleJetEfficVal(inputlist, ptVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) > 0:
+               for j in range(len(ver[i])):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < 2.4):
+                         num += 1
+                         break
+     return (num / len(ver))
+def doubleJetEfficVal(inputlist, ptVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) >= 2:
+               for j in range(len(ver[i])):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < 2.4):
+                         for k in range(len(ver[i])):
+                              if (k!=j) and (ver[i][k].Pt() > ptVal) and (abs(ver[i][k].Eta()) < 2.4) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < 1.6):
+                                   num += 1
+                                   break
+                         break
+     return (num / len(ver))
+def doubleJetMassEfficVal(inputlist, ptVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() >= ptVal) and (abs(ver[i][j].Eta()) < 2.5):
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < 2.5) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < 1.5) and ((ver[i][j].M() + ver[i][k].M()) > 300) and (k!=j):
+                              num += 1
+                              break
+                    break
+     return (num / len(ver))
+def tripleJetEfficVal(inputlist, ptVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if ver[i][j].Pt() >= 95:
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= 75) and (abs(ver[i][k].Eta()) < 2.5) and (k!=j):
+                              for m in range(len(ver[i])):
+                                   if (ver[i][m].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < 2.5) and (m!=k) and (m!=j):
+                                        num += 1
+                                        break
+                              break
+                    break
+     return (num / len(ver))
+def EtmissEfficVal(inputlist, EVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          vectorsumX = np.zeros(1, dtype=object)
+          vectorsumY = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (abs(ver[i][j].Eta()) < 5.0):
+                    vectorsumX[0] = vectorsumX[0] + ver[i][j].Px()
+                    vectorsumY[0] = vectorsumX[0] + ver[i][j].Px()
+          vectorsum = np.sqrt(vectorsumX[0]**2 + vectorsumY[0]**2)
+          if (vectorsum > EVal):
+               num += 1
+     return (num / len(ver))
+def HtEfficVal(inputlist, EVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          scalarsum = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() > 30) and (abs(ver[i][j].Eta()) < 2.4):
+                    scalarsum[0] = scalarsum[0] + ver[i][j].Pt()
+          if (scalarsum[0] > EVal):
+               num += 1
+     return (num / len(ver))
+
+#Effic Uncertainty Func
+def EfficUnc(Npass, Ntotal):
+     if (Npass > 0) and (Ntotal > 0):
+          unc = np.sqrt((Ntotal**3 + Npass**3) / ((Npass)*(Ntotal**5)))
+     else:
+          unc = 0
+     return unc
+
+def singleJetEfficNpass(inputlist, ptVal): # single jet
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) > 0:
+               for j in range(len(ver[i])):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < 2.4):
+                         num += 1
+                         break
+     return num
+def singleJetEfficNtotal(inputlist, ptVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) > 0:
+               for j in range(len(ver[i])):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < 2.4):
+                         num += 1
+                         break
+     return len(ver)
+
+def doubleJetEfficNpass(inputlist, ptVal): # double jet
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) >= 2:
+               for j in range(len(ver[i])):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < 2.4):
+                         for k in range(len(ver[i])):
+                              if (k!=j) and (ver[i][k].Pt() > ptVal) and (abs(ver[i][k].Eta()) < 2.4) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < 1.6):
+                                   num += 1
+                                   break
+                         break
+     return num
+def doubleJetEfficNtotal(inputlist, ptVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          if len(ver[i]) >= 2:
+               for j in range(len(ver[i])):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < 2.4):
+                         for k in range(len(ver[i])):
+                              if (k!=j) and (ver[i][k].Pt() > ptVal) and (abs(ver[i][k].Eta()) < 2.4) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < 1.6):
+                                   num += 1
+                                   break
+                         break
+     return len(ver)
+
+def doubleJetMassEfficNpass(inputlist, ptVal): # double jet mass
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() >= ptVal) and (abs(ver[i][j].Eta()) < 2.5):
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < 2.5) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < 1.5) and ((ver[i][j].M() + ver[i][k].M()) > 300) and (k!=j):
+                              num += 1
+                              break
+                    break
+     return num
+def doubleJetMassEfficNtotal(inputlist, ptVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() >= ptVal) and (abs(ver[i][j].Eta()) < 2.5):
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < 2.5) and (abs(abs(ver[i][j].Eta()) - abs(ver[i][k].Eta())) < 1.5) and ((ver[i][j].M() + ver[i][k].M()) > 300) and (k!=j):
+                              num += 1
+                              break
+                    break
+     return len(ver)
+
+def tripleJetEfficNpass(inputlist, ptVal): # triple jet
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if ver[i][j].Pt() >= 95:
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= 75) and (abs(ver[i][k].Eta()) < 2.5) and (k!=j):
+                              for m in range(len(ver[i])):
+                                   if (ver[i][m].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < 2.5) and (m!=k) and (m!=j):
+                                        num += 1
+                                        break
+                              break
+                    break
+     return num
+def tripleJetEfficNtotal(inputlist, ptVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          for j in range(len(ver[i])):
+               if ver[i][j].Pt() >= 95:
+                    for k in range(len(ver[i])):
+                         if (ver[i][k].Pt() >= 75) and (abs(ver[i][k].Eta()) < 2.5) and (k!=j):
+                              for m in range(len(ver[i])):
+                                   if (ver[i][m].Pt() >= ptVal) and (abs(ver[i][k].Eta()) < 2.5) and (m!=k) and (m!=j):
+                                        num += 1
+                                        break
+                              break
+                    break
+     return len(ver)
+
+def EtmissEfficNpass(inputlist, EVal): # Etmiss
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          vectorsumX = np.zeros(1, dtype=object)
+          vectorsumY = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (abs(ver[i][j].Eta()) < 5.0):
+                    vectorsumX[0] = vectorsumX[0] + ver[i][j].Px()
+                    vectorsumY[0] = vectorsumX[0] + ver[i][j].Px()
+          vectorsum = np.sqrt(vectorsumX[0]**2 + vectorsumY[0]**2)
+          if (vectorsum > EVal):
+               num += 1
+     return num
+def EtmissEfficNtotal(inputlist, EVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          vectorsumX = np.zeros(1, dtype=object)
+          vectorsumY = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (abs(ver[i][j].Eta()) < 5.0):
+                    vectorsumX[0] = vectorsumX[0] + ver[i][j].Px()
+                    vectorsumY[0] = vectorsumX[0] + ver[i][j].Px()
+          vectorsum = np.sqrt(vectorsumX[0]**2 + vectorsumY[0]**2)
+          if (vectorsum > EVal):
+               num += 1
+     return len(ver)
+
+def HtEfficNpass(inputlist, EVal): # Ht
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          scalarsum = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() > 30) and (abs(ver[i][j].Eta()) < 2.4):
+                    scalarsum[0] = scalarsum[0] + ver[i][j].Pt()
+          if (scalarsum[0] > EVal):
+               num += 1
+     return num
+def HtEfficNtotal(inputlist, EVal):
+     num = 0
+     ver = inputlist
+     for i in range(len(ver)):
+          scalarsum = np.zeros(1, dtype=object)
+          for j in range(len(ver[i])):
+               if (ver[i][j].Pt() > 30) and (abs(ver[i][j].Eta()) < 2.4):
+                    scalarsum[0] = scalarsum[0] + ver[i][j].Pt()
+          if (scalarsum[0] > EVal):
+               num += 1
+     return len(ver)
+
+###################################################
 
 def main(args):
 
@@ -182,27 +423,28 @@ def main(args):
 
 ##########################################
     print("Beginning Jet Construction")
-    h_LeadPt =     r.TH1F(name="h_LeadPt", title='h_leadPT', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
-    h_SubLeadPt =  r.TH1F(name="h_SubLeadPt", title='h_SubleadPT', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
-    h_AllPt =      r.TH1F(name="h_AllJetPt", title='h_AllJetPT', nbinsx=100, xlow=-100, xup=2000) # Pt Plots
-    h_LeadPhi =    r.TH1F(name="h_LeadPhi", title='h_LeadPhi', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
-    h_SubLeadPhi = r.TH1F(name="h_SubLeadPhi", title='h_SubLeadPhi', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
-    h_AllPhi =     r.TH1F(name="h_AllPhi", title='h_AllPhi', nbinsx=100, xlow=-3.5, xup=3.5) # Phi Plots
-    h_LeadEta =    r.TH1F(name="h_LeadEta", title='h_LeadEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
-    h_SubLeadEta = r.TH1F(name="h_SubLeadEta", title='h_SubLeadEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
-    h_AllEta =     r.TH1F(name="h_AllEta", title='h_AllEta', nbinsx=100, xlow=-5, xup=5) # Phi Plots
-    h_LeadMass =    r.TH1F(name="h_LeadMass", title='h_LeadMass', nbinsx=100, xlow=0, xup=500) # Mass Plots
-    h_SubLeadMass = r.TH1F(name="h_SubLeadMass", title='h_SubLeadMass', nbinsx=100, xlow=0, xup=500) # Mass Plots
-    h_AllMass =     r.TH1F(name="h_AllMass", title='h_AllMass', nbinsx=100, xlow=0, xup=500) # Mass Plots
+    h_LeadPt =      r.TH1F(name="h_LeadPt", title='h_leadPT', nbinsx=300, xlow=-100, xup=2200) # Pt Plots
+    h_SubLeadPt =   r.TH1F(name="h_SubLeadPt", title='h_SubleadPT', nbinsx=300, xlow=-100, xup=2200) # Pt Plots
+    h_AllPt =       r.TH1F(name="h_AllJetPt", title='h_AllJetPT', nbinsx=300, xlow=-100, xup=2200) # Pt Plots
+    h_LeadPhi =     r.TH1F(name="h_LeadPhi", title='h_LeadPhi', nbinsx=300, xlow=-3.5, xup=3.5) # Phi Plots
+    h_SubLeadPhi =  r.TH1F(name="h_SubLeadPhi", title='h_SubLeadPhi', nbinsx=300, xlow=-3.5, xup=3.5) # Phi Plots
+    h_AllPhi =      r.TH1F(name="h_AllPhi", title='h_AllPhi', nbinsx=300, xlow=-3.5, xup=3.5) # Phi Plots
+    h_LeadEta =     r.TH1F(name="h_LeadEta", title='h_LeadEta', nbinsx=300, xlow=-5, xup=5) # Phi Plots
+    h_SubLeadEta =  r.TH1F(name="h_SubLeadEta", title='h_SubLeadEta', nbinsx=300, xlow=-5, xup=5) # Phi Plots
+    h_AllEta =      r.TH1F(name="h_AllEta", title='h_AllEta', nbinsx=300, xlow=-5, xup=5) # Phi Plots
+    h_LeadMass =    r.TH1F(name="h_LeadMass", title='h_LeadMass', nbinsx=300, xlow=0, xup=500) # Mass Plots
+    h_SubLeadMass = r.TH1F(name="h_SubLeadMass", title='h_SubLeadMass', nbinsx=300, xlow=0, xup=500) # Mass Plots
+    h_AllMass =     r.TH1F(name="h_AllMass", title='h_AllMass', nbinsx=300, xlow=0, xup=500) # Mass Plots
     start = time.time()
 
    
     numofevents = args.numofevents
-    pbar = tqdm.tqdm(range(int(numofevents)))    
+    pbar = tqdm.tqdm(range(int(numofevents)))
+#    pbar = tqdm.tqdm(range(int(eventNum)))    
     missedSignalParts = 0
     signalParts = 0
     for entryNum in pbar:
-        #pbar.set_description("Jets: " + str(len(jetPartsArray)) + "; Signal Jets: " + str(signalPartCount))
+       # pbar.set_description("Jets: " + str(len(jetPartsArray)) + "; Signal Jets: " + str(signalPartCount))
         tree.GetEntry(entryNum)
         ver = tree.vz
         jetlist = []  
@@ -290,20 +532,6 @@ def main(args):
                # Ensure all inputs are same length
                 while len(jetPartList) < N_PART_PER_JET * N_FEAT:
                     jetPartList.append(0)
-#                # Add in final value to indicate if particle is matched (1) or unmatched (0)
-#                # to a gen signal particle by looking for gen signal particles within deltaR<0.4 of jet
-#                jetPartList.append(0)
-#                for e in range(len(tree.gen)):
-#                    if (
-#                        abs(tree.gen[e][1]) == SIGNAL_PDG_ID
-#                        and (e not in bannedSignalParts)
-#                        and abs(tree.gen[e][0].Eta()) < MAX_ETA
-#                    ):
-#                        if tree.gen[e][0].DeltaR(tempTLV) <= DELTA_R_MATCH:
-#                            jetPartList[-1] = 1
-#                            signalPartCount += 1
-#                            bannedSignalParts.append(e)
-#                            break
                 # Store particle inputs and jet features in overall list
                 jetPartsArray.append(jetPartList)
                 jetDataArray.append((tempTLV.Pt(), tempTLV.Eta(), tempTLV.Phi(), tempTLV.M(), jetPartList[-1]))
@@ -320,10 +548,6 @@ def main(args):
              h_LeadPhi.Fill(jetlist[0].Phi())
              h_LeadEta.Fill(jetlist[0].Eta())
              h_LeadMass.Fill(jetlist[0].M())
-        #print("eventNum: ",entryNum, "     NJets: ",jetNum, "    len(jetlist): ", len(jetlist))
-        #print("Jet 0: ", jetlist[0].Pt(),jetlist[0].Eta(), jetlist[0].Phi())
-        #print("Jet 1: ", jetlist[1].Pt(),jetlist[1].Eta(), jetlist[1].Phi())        
-        #print("Jet 2: ", jetlist[2].Pt(),jetlist[2].Eta(), jetlist[2].Phi())        
         if (len(jetlist)>1):
            h_SubLeadPt.Fill(jetlist[1].Pt())
            h_SubLeadPhi.Fill(jetlist[1].Phi())
@@ -337,42 +561,42 @@ def main(args):
     h_LeadPhi.SetTitle("Lead Jet #phi")
     h_LeadPhi.Draw()
     c.Draw()
-    c.SaveAs('h_LeadPhi.png')
+#    c.SaveAs('h_LeadPhi.png')
     c.Clear()
 
     h_SubLeadPhi.SetLineColor(r.kGreen)
     h_SubLeadPhi.SetTitle("Sub-Lead Jet #phi")
     h_SubLeadPhi.Draw()
     c.Draw()
-    c.SaveAs('h_SubLeadPhi.png')
+#    c.SaveAs('h_SubLeadPhi.png')
     c.Clear()
 
     h_AllPhi.SetLineColor(r.kBlue)
     h_AllPhi.SetTitle("All Jets #phi")
     h_AllPhi.Draw()
     c.Draw()
-    c.SaveAs('h_AllPhi.png')
+#    c.SaveAs('h_AllPhi.png')
     c.Clear()
 
     h_LeadEta.SetLineColor(r.kRed)
     h_LeadEta.SetTitle("Lead Jet #eta")
     h_LeadEta.Draw()
     c.Draw()
-    c.SaveAs('h_LeadEta.png')
+#    c.SaveAs('h_LeadEta.png')
     c.Clear()
 
     h_SubLeadEta.SetLineColor(r.kGreen)
     h_SubLeadEta.SetTitle("Sub-Lead Jet #eta")
     h_SubLeadEta.Draw()
     c.Draw()
-    c.SaveAs('h_SubLeadEta.png')
+#    c.SaveAs('h_SubLeadEta.png')
     c.Clear()
 
     h_AllEta.SetLineColor(r.kBlue)
     h_AllEta.SetTitle("All Jets #eta")
     h_AllEta.Draw()
     c.Draw()
-    c.SaveAs('h_AllEta.png')
+#    c.SaveAs('h_AllEta.png')
     c.Clear()
 
     c.SetLogy()
@@ -381,48 +605,48 @@ def main(args):
     h_LeadPt.SetTitle("Lead Jet p_{T}")
     h_LeadPt.Draw()
     c.Draw()
-    c.SaveAs('h_LeadPt.png')
+#    c.SaveAs('h_LeadPt.png')
     c.Clear()
 
     h_SubLeadPt.SetLineColor(r.kGreen)
     h_SubLeadPt.SetTitle("Sub-Lead Jet p_{T}")
     h_SubLeadPt.Draw()
     c.Draw()
-    c.SaveAs('h_SubLeadPt.png')
+#    c.SaveAs('h_SubLeadPt.png')
     c.Clear()
 
     h_AllPt.SetLineColor(r.kBlue)
     h_AllPt.SetTitle("All Jets p_{T}")
     h_AllPt.Draw()
     c.Draw()
-    c.SaveAs('h_AllPt.png')
+#    c.SaveAs('h_AllPt.png')
     c.Clear()
    
     h_LeadMass.SetLineColor(r.kRed)
     h_LeadMass.SetTitle("Lead Jet Mass")
     h_LeadMass.Draw()
     c.Draw()
-    c.SaveAs('h_LeadMass.png')
+#    c.SaveAs('h_LeadMass.png')
     c.Clear()
 
     h_SubLeadMass.SetLineColor(r.kGreen)
     h_SubLeadMass.SetTitle("Sub-Lead Jet Mass")
     h_SubLeadMass.Draw()
     c.Draw()
-    c.SaveAs('h_SubLeadMass.png')
+#    c.SaveAs('h_SubLeadMass.png')
     c.Clear()
 
     h_AllMass.SetLineColor(r.kBlue)
     h_AllMass.SetTitle("All Jets Mass")
     h_AllMass.Draw()
     c.Draw()
-    c.SaveAs('h_AllMass.png')
+#    c.SaveAs('h_AllMass.png')
     c.Clear()
 
 
   
     end = time.time() # timing
-    print(f'Elapsed Time: {str(end - start)}')
+    print(f'Elapsed Time: {(end - start)}')
 
     print(f'Length of eventjets = {len(eventjets)}')
 
@@ -431,63 +655,131 @@ def main(args):
 #         if len(eventjets) <= 2:
 #              print(f'Event {i} has less than or equal to 2 jets')
 
-#    print(f'eventjets[0][0].Phi() = {eventjets[0][0].Phi()}')
-#    print(f'eventjets[0][1].Phi() = {eventjets[0][1].Phi()}')
-#    print(f'eventjets[{len(eventjets)-1}][0].Phi() = {eventjets[len(eventjets)-1][0].Phi()}')
-#    print(f'eventjets[{len(eventjets)-1}][1].Phi() = {eventjets[len(eventjets)-1][1].Phi()}')
-
-#    for i in range(len(eventjets)):
-#         if i >= (len(eventjets) - 5):
-#              print(eventjets[i][1].Phi())
 
     ## Calling Effic Functions
-    singleJetEffic(eventjets, 180)
+    singleJetEffic(eventjets, 180, 2.4)
     doubleJetEffic(eventjets, 150, 2.5)
-    doubleJetdeltaEtaEffic(eventjets, 112, 2.3, 1.6)
-    doubleJetMassEffic(eventjets, 110, 35, 620)
+    doubleJetdeltaEtaEffic(eventjets, 112, 2.4, 1.6)
+    doubleJetMassEffic(eventjets, 160, 35, 620, 5)
     doubleJetMass2Effic(eventjets, 30, 2.5, 1.5, 300)
     tripleJet(eventjets, 95, 75, 65, 2.5)
-    EtmissEffic(eventjets, 100, 5.0)
-    HtEffic(eventjets, 360, 30, 2.5)
+    EtmissEffic(eventjets, 200, 5.0)
+    HtEffic(eventjets, 450, 30, 2.4)
     EtEffic(eventjets, 2000, 5.0)
     
+    ## Plotting Effic Curves
+    from array import array
 
-#    print('\n')
-#    listofevents = []
-#    for i in range(len(eventjets)):
-#         sum = 0
-#         for j in range(len(eventjets[i])):
-#              if (eventjets[i][j].Pt() > 30) and (abs(eventjets[i][j].Eta()) < 2.5):
-#                   sum = sum + eventjets[i][j].Pt()
-#         print(f'jet candidate pT sum for event {i} = {sum}') 
-#         if sum < 360:
-#              listofevents.append((i))
-#    print(f'Number of events with Ht energy sum < 360: {len(listofevents)}') 
-#    hit = 0
-#    for i in range(len(eventjets)):
-#         for j in range(len(eventjets[i])):
-#              if eventjets[i][j].M() >= 300:
-#                   hit += 1
-#    print(f'Number of single jet masses >= to 300 GeV: {hit}')
+    begin = time.time()
+    c1 = r.TCanvas('c1', 'Title', 200, 10, 700, 500)
+    c1.SetGrid()
+
+    n = 40 # 40
+    x1, x2, x3, y1, y2, y3, y4, y5, y6 = array('f'), array('f'), array('f'), array('f'), array('f'), array('f'), array('f'), array('f'), array('f')
+    ex, ey1, ey2, ey3, ey4, ey5, ey6  = array('f'), array('f'), array('f'), array('f'), array('f'), array('f'), array('f')
+ 
+    for i in range(n):
+         x1.append(10*i) # Input
+         x2.append(7.5*i)
+         x3.append(133.333*i) 
+         y1.append(singleJetEfficVal(eventjets, x1[i])) # Outpit
+         y2.append(doubleJetEfficVal(eventjets, x1[i]))
+         y3.append(doubleJetMassEfficVal(eventjets, x1[i]))
+         y4.append(tripleJetEfficVal(eventjets, x1[i]))
+         y5.append(EtmissEfficVal(eventjets, x2[i]))
+         y6.append(HtEfficVal(eventjets, x3[i]))
+         ex.append(0) # Error Bars
+         ey1.append(EfficUnc(singleJetEfficNpass(eventjets, x1[i]), singleJetEfficNtotal(eventjets, x1[i])))
+         ey2.append(EfficUnc(doubleJetEfficNpass(eventjets, x1[i]), doubleJetEfficNtotal(eventjets, x1[i])))
+         ey3.append(EfficUnc(doubleJetMassEfficNpass(eventjets, x1[i]), doubleJetMassEfficNtotal(eventjets, x1[i])))
+         ey4.append(EfficUnc(tripleJetEfficNpass(eventjets, x1[i]), tripleJetEfficNtotal(eventjets, x1[i])))
+         ey5.append(EfficUnc(EtmissEfficNpass(eventjets, x2[i]), EtmissEfficNtotal(eventjets, x2[i])))       
+         ey6.append(EfficUnc(HtEfficNpass(eventjets, x3[i]), HtEfficNtotal(eventjets, x3[i])))
+
+    g_singleJet = r.TGraphErrors(n, x1, y1, ex, ey1)
+    g_singleJet.SetTitle('Single Jet Effic')
+    g_singleJet.SetMarkerColor(2)
+    g_singleJet.SetMarkerStyle(5)
+    g_singleJet.GetXaxis().SetTitle('Pt [GeV]')
+    g_singleJet.GetYaxis().SetTitle('Effic')
+    g_singleJet.GetYaxis().SetRangeUser(0, 1.0)
+    g_singleJet.Draw()
+    c1.Update()
+    c1.SaveAs('singleJetEffic.png')
+    c1.Clear()
+
+    g_doubleJet = r.TGraphErrors(n, x1, y2, ex, ey2)
+    g_doubleJet.SetTitle('Double Jet Effic')
+    g_doubleJet.SetMarkerColor(2)
+    g_doubleJet.SetMarkerStyle(5)
+    g_doubleJet.GetXaxis().SetTitle('Pt [GeV]')
+    g_doubleJet.GetYaxis().SetTitle('Effic')
+    g_doubleJet.GetYaxis().SetRangeUser(0, 1.0)
+    g_doubleJet.Draw()
+    c1.Update()
+    c1.SaveAs('doubleJetEffic.png')
+    c1.Clear()
+
+    g_doubleJetMass = r.TGraphErrors(n, x1, y3, ex, ey3)
+    g_doubleJetMass.SetTitle('Double Jet + Mass Effic')
+    g_doubleJetMass.SetMarkerColor(2)
+    g_doubleJetMass.SetMarkerStyle(5)
+    g_doubleJetMass.GetXaxis().SetTitle('Pt [GeV]')
+    g_doubleJetMass.GetYaxis().SetTitle('Effic')
+    g_doubleJetMass.GetYaxis().SetRangeUser(0, 1.0)
+    g_doubleJetMass.Draw()
+    c1.Update()
+    c1.SaveAs('doubleJetMassEffic.png')
+    c1.Clear()
+
+    g_tripleJet = r.TGraphErrors(n, x1, y4, ex, ey4)
+    g_tripleJet.SetTitle('Triple Jet Effic')
+    g_tripleJet.SetMarkerColor(2)
+    g_tripleJet.SetMarkerStyle(5)
+    g_tripleJet.GetXaxis().SetTitle('Pt [GeV]')
+    g_tripleJet.GetYaxis().SetTitle('Effic')
+    g_tripleJet.GetYaxis().SetRangeUser(0, 1.0)
+    g_tripleJet.Draw()
+    c1.Update()
+    c1.SaveAs('tripleJetEffic.png')
+    c1.Clear()
+
+    g_Etmiss = r.TGraphErrors(n, x2, y5, ex, ey5)
+    g_Etmiss.SetTitle('Etmiss Effic')
+    g_Etmiss.SetMarkerColor(2)
+    g_Etmiss.SetMarkerStyle(5)
+    g_Etmiss.GetXaxis().SetTitle('Pt [GeV]')
+    g_Etmiss.GetYaxis().SetTitle('Effic')
+    g_Etmiss.GetYaxis().SetRangeUser(0, 1.0)
+    g_Etmiss.Draw()
+    c1.Update()
+    c1.SaveAs('EtmissEffic.png')
+    c1.Clear()
+
+    g_Ht = r.TGraphErrors(n, x3, y6, ex, ey6)
+    g_Ht.SetTitle('Ht Effic')
+    g_Ht.SetMarkerColor(2)
+    g_Ht.SetMarkerStyle(5)
+    g_Ht.GetXaxis().SetTitle('Pt [GeV]')
+    g_Ht.GetYaxis().SetTitle('Effic')
+    g_Ht.GetYaxis().SetRangeUser(0, 1.0)
+    g_Ht.Draw()
+    c1.Update()
+    c1.SaveAs('HtEffic.png')
+    c1.Clear()
 
 
-#    for i in range(len(eventjets)):
-#         for j in range(len(eventjets[i])):
-#              print(f'{eventjets[i][j].Pt()},{eventjets[i][j].Phi()},{eventjets[i][j].Eta()}')
-#         print('\n')
-#    for i in range(len(eventjets)):
-#         tree.GetEntry(i)
-#         for j in range(len(tree.l1jet)):
-#              print(f'{tree.l1jet[j][0].Pt()},{tree.l1jet[j][0].Phi()},{tree.l1jet[j][0].Eta()}')
-#         print('\n')
-#
-#    #Percent Error (if l1jets have already been created) of dataforge compared to w.e)
-#    print('\n')
-#    for i in range(len(eventjets)):
-#         tree.GetEntry(i)
-#         for j in range(len(tree.l1jet)):
-#              print(f'Pt %err = {(eventjets[i][j].Pt()-tree.l1jet[j][0].Pt())/eventjets[i][j].Pt()}; Phi %err = {(eventjets[i][j].Phi()-tree.l1jet[j][0].Phi())/eventjets[i][j].Phi()}; Eta %err = {(eventjets[i][j].Eta()-tree.l1jet[j][0].Eta())/eventjets[i][j].Eta()}')
-#         print('\n')
+
+
+    finish = time.time()
+    print(f'Effic Curve Plot Time = {finish - begin}')
+    print(f'Total RUN Time = {finish - start}')
+
+###########################################################
+
+
+
+
 ###############################################
 
 
