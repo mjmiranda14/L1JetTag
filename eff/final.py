@@ -717,19 +717,8 @@ def main(args):
          c.Draw()
          c.SaveAs('h_AllMass.png')
          c.Clear()
-  
-
-    ## Calling Trigger Effic and Rate Functions
-    singleJetTrigger(eventjets, 180, 2.4)
-    doubleJetTrigger(eventjets, 150, 2.5)
-    doubleJetdeltaEtaTrigger(eventjets, 112, 2.4, 1.6)
-    doubleJetMassTrigger(eventjets, 160, 35, 620, 5)
-    doubleJetMass2Trigger(eventjets, 30, 2.5, 1.5, 300)
-    tripleJetTrigger(eventjets, 95, 75, 65, 2.5)
-    MetTrigger(eventjets, 200, 5.0)
-    HtTrigger(eventjets, 450, 30, 2.4)
-    EtTrigger(eventjets, 2000, 5.0)
     
+
     ## Plotting Effic Curves 
     from array import array
     
@@ -831,7 +820,17 @@ def main(args):
          c1.SaveAs('HtEffic.png')
          c1.Clear()
 
-
+  
+    ## Calling Trigger Effic and Rate Functions
+    singleJetTrigger(eventjets, 180, 2.4)
+    doubleJetTrigger(eventjets, 150, 2.5)
+    doubleJetdeltaEtaTrigger(eventjets, 112, 2.4, 1.6)
+    doubleJetMassTrigger(eventjets, 160, 35, 620, 5)
+    doubleJetMass2Trigger(eventjets, 30, 2.5, 1.5, 300)
+    tripleJetTrigger(eventjets, 95, 75, 65, 2.5)
+    MetTrigger(eventjets, 200, 5.0)
+    HtTrigger(eventjets, 450, 30, 2.4)
+    EtTrigger(eventjets, 2000, 5.0)
 
 
     finish = time.time()
