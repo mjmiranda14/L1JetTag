@@ -7,23 +7,55 @@ The created plots are saved as png files. One option for exporting them is to us
 ---
 **RUNNING THE CODE:**
 - The virtual environment shown [here](https://github.com/ucsd-hep-ex/L1JetTag/tree/main) must be used with this code
+
 - This code uses `argparse` to pass arguments from the command line and allow for easy customization of the code
+
 - Structure of code: `python final.py "file.root" [0 for PF, 1 for PUPPI] [desired number of events] [jet feat plots - 0 for OFF, 1 for ON] [trigger effic - 0 for OFF, 1 for ON] [trigger rate - 0 for OFF, 1 for ON] [effic curves - 0 for OFF, 1 for ON]`
+
 - Command Line Example: `python final.py 'file.root' 0 1000 1 0 0 1`
-	-  this would run the code over 1000 events using PF particles. It would create and save jet feature plots and efficiency curve plots, but it would not print values for the trigger efficiency and rates.  
+	-  this would run the code over 1000 events using PF particles. It would create and save jet feature plots and efficiency curve plots, but it would not print values for the trigger efficiency and rates. 
+
+- **NOTE:** the ability to declare the number of events to run over will eventually be removed once the code is "ready"
 
 ---
 **JET FEATURE PLOTTER**:
 - Assuming the `jet feat plots` is turned ON, plots will be made for jet *pT*, *phi*, *eta*, and *mass*.
+
 - For each feature, 3 plots will be made (for a total of 12 plots):
 	1. *All Jet*s: takes a datapoint from every constructed jet of every event for the dataset from the *eventjets* list.
 	2. *Lead Jet*: takes a datapoint from the first jet (which is also the highest pT jet due to using a seeded clustering algorithm) of every event 
 	3. *SubLead Jet*: takes a datapoint from the second jet of every event
+
 - **WARNING:**
 	- This clustering algorithm creates jets based on their pT and delta-R values for a given threshold. So, some events may have 0 or even 1 jet in total.
 		- Therefore, you should expect a discrepancy in the number of entries (datapoints) for the lead and sublead plots compared to the total events used.
+
 - the 12 plots are saved as png files and are labeled as follows: 'h_AllPt.png', 'h_LeadPt.png', 'h_SubLeadPt.png'
 
+- One may change aspects of the plots (title, axis title and range, bins, etc.) as normal by editing before the plot and canvas are drawn
 ---
 **TRIGGER EFFICIENCY & RATE**:
-- 
+- Assuming the `trigg effic` and/or the `trigger rate` is turned ON, values for the efficiency and regular (nominal) rate of select triggers are printed out in the terminal.
+
+- The triggers used are defined as a functions before the `main()` section.
+	- in each of these "trigger functions" a counting variable is incremented each time a trigger would "fire" for a particular event
+	- the value of this counting variable is then used to calculate the efficiency of the trigger
+		- Defined as: (# of passed events) / (total # of events)
+	- and to calculate the nominal rate of the trigger
+		- Defined as: (# of passed events) / (total # of events) * 40 MHz
+		- if this rate is less than or equal to 1 MHz the rate is given in kHz
+
+- Triggers used here (total of 9 triggers):
+	- Jet Triggers: *single jet*, *double jet*, *triple jet*
+		- the double jet trigger has 4 versions for different requirements such as delta-R and mass. 
+	- Energy Sum Triggers: *missing transverse energy (MET)*, *Ht*, *Et*
+
+- After jet construction and the `eventjets` list is populated, these trigger functions are called with a set of arguments corresponded to the various trigger requirements in terms of pT, eta, phi, mass, etc.
+	- the values of these requirements can be easily modified in the code
+	- and whatever values were used will be printed out with the final value in the terminal
+	- for example: 
+		- `singleJetTrigger(eventjets, 180, 2.4)` sets the trigger to fire if at least one jet in a given event as a pT > 180 GeV and an absolute value of eta < 2.4
+		- `singleJetTrigger(eventjets, 250, 2.0)` sets the trigger to fire if at least one jet in a given event as a pT > 250 GeV and an absolute value of eta < 2.0
+
+---
+**EFFICIENCY CURVES**
