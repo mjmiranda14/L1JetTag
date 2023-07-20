@@ -19,7 +19,7 @@ The created plots are saved as png files. One option for exporting them is to us
 
 ---
 **JET FEATURE PLOTTER**:
-- Assuming the `jet feat plots` is turned ON, plots will be made for jet *pT*, *phi*, *eta*, and *mass*.
+- Assuming the `jet feat plots` is turned ON, [`TH1F`](https://root.cern.ch/root/htmldoc/guides/users-guide/Histograms.html) histogram plots will be made for jet *pT*, *phi*, *eta*, and *mass*.
 
 - For each feature, 3 plots will be made (for a total of 12 plots):
 	1. *All Jet*s: takes a datapoint from every constructed jet of every event for the dataset from the *eventjets* list.
@@ -50,7 +50,7 @@ The created plots are saved as png files. One option for exporting them is to us
 		- the double jet trigger has 4 versions for different requirements such as delta-R and mass. 
 	- Energy Sum Triggers: *missing transverse energy (MET)*, *Ht*, *Et*
 
-- After jet construction and the `eventjets` list is populated, these trigger functions are called with a set of arguments corresponded to the various trigger requirements in terms of pT, eta, phi, mass, etc.
+- After jet construction and the `eventjets` list is populated, these trigger functions are called with a set of arguments corresponding to the various trigger requirements in terms of pT, eta, phi, mass, etc.
 	- the values of these requirements can be easily modified in the code
 	- and whatever values were used will be printed out with the final value in the terminal
 	- for example: 
@@ -58,4 +58,27 @@ The created plots are saved as png files. One option for exporting them is to us
 		- `singleJetTrigger(eventjets, 250, 2.0)` sets the trigger to fire if at least one jet in a given event as a pT > 250 GeV and an absolute value of eta < 2.0
 
 ---
-**EFFICIENCY CURVES**
+**EFFICIENCY CURVES**:
+	- Assuming the `effic curve` is turned ON, [`TGraphErrors`](https://root.cern.ch/root/html534/guides/users-guide/Graphs.html) plots will be made for the trigger efficiency
+
+- Of the 9 triggers defined, only 6 have efficiency curves made here
+	- these are: *single jet*,  *double jet*, *double jet + mass*, *triple jet*, *MET*, *HT*
+
+**Calculating these Efficiencies and Uncertainties**
+	- to get the datapoints a separate function for each trigger is defined outside the `main()` section that returns only the efficiency value
+	- to get the uncertainties a general `EfficUnc` function is defined based on Poisson Error with arguments `(Npass, Ntotal)`
+	- separate functions for each trigger are defined to return a value for `Npass` the number of events the trigger fires for, and a value for `Ntotal` the total number of events over which the trigger is run
+
+- **NOTE:** for each efficiency curve only pT is varied; that is, *effic(pT)*
+	- and for triggers with multi-jet requirements, only the last jet pT requirement was varied
+
+- the y-axis range of every plot is set to show [0, 1.0] for ease of comparisons
+
+- the 6 plots are saved as png files and are labeled as follows: 'singleJetEffic.png', 'doubleJetEffic.png', etc.
+
+- One may change aspects of the plots (title, axis title and range, bins, etc.) as normal by editing before the plot and canvas are drawn
+
+- **WARNING**: the error bars are working as intended, but these values are too small to be noticeable on the graph
+	- one can easily scale these errors if necessary by modifying the error bar array filling by a scale factor of your choice
+
+---
