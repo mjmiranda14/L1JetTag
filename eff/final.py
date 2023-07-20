@@ -842,11 +842,11 @@ def main(args):
     print(f'Total RUN Time = {finish - start}\n')
 
 ###########################################################
-    print(f'usePuppi val = {bool(args.usePuppi)}') 
-    print(f'featplotOn val = {bool(args.featplotOn)}')
-    print(f'triggefficOn val = {bool(args.triggefficOn)}')    
-    print(f'triggrateOn val = {bool(args.triggrateOn)}')
-    print(f'efficcurveOn val = {bool(args.efficcurveOn)}')
+#    print(f'usePuppi val = {bool(args.usePuppi)}') 
+#    print(f'featplotOn val = {bool(args.featplotOn)}')
+#    print(f'triggefficOn val = {bool(args.triggefficOn)}')    
+#    print(f'triggrateOn val = {bool(args.triggrateOn)}')
+#    print(f'efficcurveOn val = {bool(args.efficcurveOn)}')
 
 ###############################################
 
