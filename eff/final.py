@@ -837,7 +837,7 @@ def main(args):
     finish = time.time()
     print(f'\nLength of eventjets = {len(eventjets)}')
     print(f'\nJet Construction Time: {(end - start)}')
-    if args.efficcurveOn:
+    if args.featplotOn or args.triggefficOn or args.triggrateOn or args.efficcurveOn:
          print(f'Plotters and Calculators Time = {finish - begin}')
     print(f'Total RUN Time = {finish - start}\n')
 
