@@ -19,7 +19,7 @@ r.gROOT.SetBatch(1)
 # eta = \u03B7
 # delta = \u0394
 
-## Effic Functions
+## Effic & Rate Functions
 # Jet Triggers
 def singleJetTrigger(inputlist, ptVal, etaVal):
      num = 0
@@ -208,7 +208,7 @@ def EtTrigger(inputlist, EVal, etaVal):
                res = (f'{(num / len(ver)) * 40 * 1000} kHz')
           print(f'The effic of E_t energy sum > {EVal} of jets with |\u03B7| < {etaVal} is {res}\n')
 
-## Effic Plotters
+## Effic Curve Plotters
 def singleJetEfficVal(inputlist, ptVal):
      num = 0
      ver = inputlist
@@ -719,7 +719,7 @@ def main(args):
          c.Clear()
   
 
-    ## Calling Effic Functions
+    ## Calling Trigger Effic and Rate Functions
     singleJetTrigger(eventjets, 180, 2.4)
     doubleJetTrigger(eventjets, 150, 2.5)
     doubleJetdeltaEtaTrigger(eventjets, 112, 2.4, 1.6)
