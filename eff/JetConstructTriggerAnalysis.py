@@ -506,7 +506,7 @@ def main(args):
    
 #    numofevents = args.numofevents
 #    pbar = tqdm.tqdm(range(int(numofevents))) # argparse option to only RUN over a specific number of events
-    pbar = tqdm.tqdm(range(int(eventNum/100)))    
+    pbar = tqdm.tqdm(range(int(eventNum)))    
     missedSignalParts = 0
     signalParts = 0
     for entryNum in pbar:
@@ -845,7 +845,7 @@ def main(args):
     print(f'Total RUN Time = {finish - start}\n')
 
 ###############################################
-    print(f'usePuppi val = {bool(args.usePuppi)}') 
+#    print(f'usePuppi val = {bool(args.usePuppi)}') 
 #    print(f'featplotOn val = {bool(args.featplotOn)}')
 #    print(f'triggefficOn val = {bool(args.triggefficOn)}')    
 #    print(f'triggrateOn val = {bool(args.triggrateOn)}')
@@ -865,7 +865,7 @@ def main(args):
 if __name__ == "__main__":
      parser = argparse.ArgumentParser(description="Process arguments")
      parser.add_argument("inFileName", type=str, help="input ROOT file name")
-     parser.add_argument("usePuppi", type=int, help="candidate type ('' for PF, 1 [or anything] for PUPPI)")
+     parser.add_argument("usePuppi", type=int, help="candidate type (0 for PF, 1 for PUPPI)")
 #     parser.add_argument('numofevents', type=int, help='number of input events')
      parser.add_argument('featplotOn', type=int, help='jet feat plotter (0 for OFF, 1 for ON)')
      parser.add_argument('triggefficOn', type=int, help='trigger effic calculator (0 for OFF, 1 for ON)')
