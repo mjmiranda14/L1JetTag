@@ -19,6 +19,7 @@ r.gROOT.SetBatch(1)
 # eta = \u03B7
 # delta = \u0394
 
+
 ## Trigger Rate Functions
 # Jet Triggers
 def singleJetTriggRate(inputlist, ptVal, etaVal):
@@ -460,7 +461,7 @@ def main(args):
 #              print(f'Event {i} has less than or equal to 2 jets')
 
 
-    ## Calling Effic Functions
+    ## Calling Trigger Rate Functions
     singleJetTriggRate(eventjets, 180, 2.4)
     doubleJetTriggRate(eventjets, 150, 2.5)
     doubleJetdeltaEtaTriggRate(eventjets, 112, 2.4, 1.6)
