@@ -21,20 +21,20 @@ r.gROOT.SetBatch(1)
 
 ## Trigger Effic & Rate Functions
 def singleJetTrigger(inputlist, ptVal, etaVal):
-     num = 0
-     ver = inputlist
-     for i in range(len(ver)):
-          if len(ver[i]) > 0:
-               for j in range(len(ver[i])):
+     num = 0      # counting variable
+     ver = inputlist      # easier to type "ver" than "inputlist"
+     for i in range(len(ver)):      # looping over every event stored in your 'eventjets' list
+          if len(ver[i]) > 0:      # accounting for events with 0 jets
+               for j in range(len(ver[i])):      # looping over every jet in a given event [i]
                     if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < etaVal):
-                         num += 1
+                         num += 1      # incrementing the counting variable
                          break
-     if args.triggefficOn:
+     if args.triggefficOn:      # prints out trigger efficiency value if this feature is turned on
           print(f'\nThe effic of single jets with pT > {ptVal} and |\u03B7| < {etaVal} is {num / len(ver)} over {len(ver)} events')
-     if args.triggrateOn:
+     if args.triggrateOn:      # prints out trigger rate value if this feature is turned on
           if (num/len(ver)*40) > 1:
                res = (f'{(num / len(ver)) * 40} MHz')
-          else:
+          else:      # prints out rate in kHz if sufficiently small
                res = (f'{(num / len(ver)) * 40 * 1000} kHz')
           print(f'The nominal trigger rate of single jets with pT > {ptVal} and |\u03B7| < {etaVal} is {res} with {num} events firing over {len(ver)} events\n')
 
