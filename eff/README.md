@@ -22,6 +22,15 @@ The created plots are saved as png files. One option for exporting them is to us
 	- `python JetConstructTriggerAnaylsis.py 'file.root' 1 10000 0 1 1 0`
 	- this would run the same options from the above example except over the first 10000 events of the ntuple
 ---
+**UPDATING TRIGGER REQUIREMENT VALUES**:
+- With the updated of Phase II L1 Trigger TDRs, it will become necessary to update the trigger requirements of these and any triggers added in the future
+
+- To make this implementation easier, the triggers are defined as function in the first section of the code before the `main()` section under "*Trigger Effic & Rate Functions*"
+	- Trigger requirements are passed as arguments of these functions which are called at the end of the code under the "*Calling Trigger Effic and Rate Functions*"
+
+- For example, the `singleJetTrigger(inputlist, ptVal, etaVal)` is defined this way and currently called with `singleJetTrigger(eventjets, 180, 2.4)` where 180 GeV is the pT threshold and 2.4 is the abs(eta) threshold
+	- If one wanted to update this to, pt > 250 GeV and eta < 2.2, one would only need to change the values in this line: `singleJetTrigger(eventjets, 250, 2.2)`
+---
 **JET FEATURE PLOTTER**:
 - Assuming the `jet feat plots` is turned ON, [`TH1F`](https://root.cern.ch/root/htmldoc/guides/users-guide/Histograms.html) histogram plots will be made for jet *pT*, *phi*, *eta*, and *mass*.
 
@@ -85,4 +94,3 @@ The created plots are saved as png files. One option for exporting them is to us
 	- one can easily scale these errors if necessary by modifying the error bar array filling by a scale factor of your choice
 
 ---
-
