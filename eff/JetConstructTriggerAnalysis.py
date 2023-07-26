@@ -122,10 +122,11 @@ def HtTrigger(inputlist, EVal, ptVal, etaVal):
 def MetTrigger(EVal):
      num = 0
      inFileName = args.inFileName
-     inFile = r.TFile.Open(inFileName, "READ")
-     tree = inFile.Get("ntuple0/objects")
-     ver = inFile.Get("ntuple0/objects/vz") 
+     inFile = r.TFile.Open(inFileName, 'READ')
+     tree = inFile.Get('ntuple0/objects')
+     ver = inFile.Get('ntuple0/objects/vz')
      eventNum = tree.GetEntries()
+     met_values = []
      tree.GetEntry(0)
      ver = tree.pup
      for a in range(eventNum):
@@ -133,12 +134,14 @@ def MetTrigger(EVal):
           if len(ver) > 1:
                tmpTLVPx = ver[0][0].Px()
                tmpTLVPy = ver[0][0].Py()
-               for i in range(1, len(ver)):
-                    tmpTLVPx = tmpTLVPx + ver[i][0].Px()
-                    tmpTLVPy = tmpTLVPy + ver[i][0].Py()
+               for b in range(1, len(ver)):
+                    tmpTLVPx = tmpTLVPx + ver[b][0].Px()
+                    tmpTLVPy = tmpTLVPy + ver[b][0].Py()
                vectorsum = np.sqrt(tmpTLVPx**2 + tmpTLVPy**2)
-               if vectorsum > EVal:
-                    num += 1 
+          met_values.append(vectorsum)
+     met_values = np.array(met_values)
+     mask = met_values > EVal
+     num = len(met_values[mask])
      if args.triggefficOn:
           print(f'\nThe effic of MET energy sum > {EVal} of jets is {num / eventNum} over {eventNum} events')
      if args.triggrateOn:
@@ -224,13 +227,14 @@ def HtEfficVal(inputlist, EVal):
                num += 1
      return (num / len(ver))
 
-def MetEfficVal(EVal):
+def MetEfficVal(EVal_bins):
      num = 0
      inFileName = args.inFileName
      inFile = r.TFile.Open(inFileName, 'READ')
      tree = inFile.Get('ntuple0/objects')
      ver = inFile.Get('ntuple0/objects/vz')
      eventNum = tree.GetEntries()
+     met_values = []
      tree.GetEntry(0)
      ver = tree.pup
      for a in range(eventNum):
@@ -242,38 +246,30 @@ def MetEfficVal(EVal):
                     tmpTLVPx = tmpTLVPx + ver[b][0].Px()
                     tmpTLVPy = tmpTLVPy + ver[b][0].Py()
                vectorsum = np.sqrt(tmpTLVPx**2 + tmpTLVPy**2)
-               if vectorsum > EVal:
-                    num += 1
+          met_values.append(vectorsum)
+     met_values = np.array(met_values)
+     num = np.digitize(met_values, EVal_bins)
      return (num / eventNum)
 
 ## Effic Uncertainty Func
 def EfficUnc(Npass, Ntotal):
-     if (Npass > 0) and (Ntotal > 0):
+     try:
           unc = np.sqrt((Ntotal**3 + Npass**3) / ((Npass)*(Ntotal**5)))
-     else:
+     except:
           unc = 0
      return unc
 
-def singleJetEfficNpass(inputlist, ptVal): # single jet
+def singleJetEfficNpass(inputlist, ptVal):
+     etaVal = 2.4
      num = 0
      ver = inputlist
      for i in range(len(ver)):
           if len(ver[i]) > 0:
                for j in range(len(ver[i])):
-                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < 2.4):
+                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < etaVal):
                          num += 1
                          break
      return num
-#def singleJetEfficNtotal(inputlist, ptVal):
-#     num = 0
-#     ver = inputlist
-#     for i in range(len(ver)):
-#          if len(ver[i]) > 0:
-#               for j in range(len(ver[i])):
-#                    if (ver[i][j].Pt() > ptVal) and (abs(ver[i][j].Eta()) < 2.4):
-#                         num += 1
-#                         break
-#     return len(ver)
 
 def doubleJetEfficNpass(inputlist, ptVal):
      etaVal, deltaEta = 2.4, 1.6
@@ -338,13 +334,14 @@ def HtEfficNpass(inputlist, EVal):
                num += 1
      return num
 
-def MetEfficNpass(EVal):
+def MetEfficNpass(EVal_bins):
      num = 0
      inFileName = args.inFileName
      inFile = r.TFile.Open(inFileName, 'READ')
      tree = inFile.Get('ntuple0/objects')
      ver = inFile.Get('ntuple0/objects/vz')
      eventNum = tree.GetEntries()
+     met_values = []
      tree.GetEntry(0)
      ver = tree.pup
      for a in range(eventNum):
@@ -356,14 +353,10 @@ def MetEfficNpass(EVal):
                     tmpTLVPx = tmpTLVPx + ver[b][0].Px()
                     tmpTLVPy = tmpTLVPy + ver[b][0].Py()
                vectorsum = np.sqrt(tmpTLVPx**2 + tmpTLVPy**2)
-               if vectorsum > EVal:
-                    num += 1
+          met_values.append(vectorsum)
+     met_values = np.array(met_values)
+     num = np.digitize(met_values, EVal_bins)
      return num
-
-
-
-
-
 
 
 ##################################################################################
@@ -640,33 +633,27 @@ def main(args):
     
 
     ## Plotting Effic Curves 
-    from array import array
-    
     if args.efficcurveOn:
          print("\nBeginning Efficiency Curve Plotting")
          c1 = r.TCanvas('c1', 'Title', 200, 10, 700, 500)
          c1.SetGrid()
 
          n = 40 # num of points in TGraph
-         x1, x2, x3, y1, y2, y3, y4, y5 = array('f'), array('f'), array('f'), array('f'), array('f'), array('f'), array('f'), array('f')
-         ex, ey1, ey2, ey3, ey4, ey5 = array('f'), array('f'), array('f'), array('f'), array('f'), array('f')
- 
-         pbar1 = tqdm.tqdm(range(n))
-         pbar1.set_description("Grabbing Data Points: ")
-         for i in pbar1:
-              x1.append(10*i) # Input
-              x2.append(25*i)
-              x3.append(37.5*i) 
-              y1.append(singleJetEfficVal(eventjets, x1[i])) # Output
+
+         from array import array
+         x1, x3, y1, y2, y3, y5, ex, ey1, ey2, ey3, ey5 = array('f'), array('f'), array('f'),array('f'),array('f'),array('f'),array('f'),array('f'),array('f'),array('f'),array('f')
+
+         for i in range(n):
+              x1.append(10*i)
+              x3.append(37.5*i)
+              y1.append(singleJetEfficVal(eventjets, x1[i]))         
               y2.append(doubleJetEfficVal(eventjets, x1[i]))
               y3.append(quadJetHtEfficVal(eventjets, x3[i]))
-#              y4.append(MetEfficVal(x2[i]))
               y5.append(HtEfficVal(eventjets, x3[i]))
-              ex.append(0) # Error Bars
+              ex.append(0)
               ey1.append(EfficUnc(singleJetEfficNpass(eventjets, x1[i]), len(eventjets)))
               ey2.append(EfficUnc(doubleJetEfficNpass(eventjets, x1[i]), len(eventjets)))
               ey3.append(EfficUnc(quadJetHtEfficNpass(eventjets, x3[i]), len(eventjets)))
-#              ey4.append(EfficUnc(MetEfficNpass(x2[i]), eventNum))       
               ey5.append(EfficUnc(HtEfficNpass(eventjets, x3[i]), len(eventjets)))
 
  
@@ -676,7 +663,7 @@ def main(args):
          g_singleJet.SetMarkerStyle(5)
          g_singleJet.GetXaxis().SetTitle('Pt [GeV]')
          g_singleJet.GetYaxis().SetTitle('Effic')
-         g_singleJet.GetYaxis().SetRangeUser(0, 1.0)
+#         g_singleJet.GetYaxis().SetRangeUser(0, 1.0)
          g_singleJet.Draw()
          c1.Update()
          c1.SaveAs('singleJetEffic.png')
@@ -688,7 +675,7 @@ def main(args):
          g_doubleJet.SetMarkerStyle(5)
          g_doubleJet.GetXaxis().SetTitle('Pt [GeV]')
          g_doubleJet.GetYaxis().SetTitle('Effic')
-         g_doubleJet.GetYaxis().SetRangeUser(0, 1.0)
+#         g_doubleJet.GetYaxis().SetRangeUser(0, 1.0)
          g_doubleJet.Draw()
          c1.Update()
          c1.SaveAs('doubleJetEffic.png')
@@ -700,34 +687,39 @@ def main(args):
          g_quadJetHt.SetMarkerStyle(5)
          g_quadJetHt.GetXaxis().SetTitle('Pt [GeV]')
          g_quadJetHt.GetYaxis().SetTitle('Effic')
-         g_quadJetHt.GetYaxis().SetRangeUser(0, 1.0)
+#         g_quadJetHt.GetYaxis().SetRangeUser(0, 1.0)
          g_quadJetHt.Draw()
          c1.Update()
          c1.SaveAs('quadJetHtEffic.png')
          c1.Clear()
 
-#         g_Met = r.TGraphErrors(n, x2, y4, ex, ey4)
-#         g_Met.SetTitle('MET Effic')
-#         g_Met.SetMarkerColor(2)
-#         g_Met.SetMarkerStyle(5)
-#         g_Met.GetXaxis().SetTitle('Pt [GeV]')
-#         g_Met.GetYaxis().SetTitle('Effic')
-#         g_Met.GetYaxis().SetRangeUser(0, 1.0)
-#         g_Met.Draw()
-#         c1.Update()
-#         c1.SaveAs('MetEffic.png')
-#         c1.Clear()
-
          g_Ht = r.TGraphErrors(n, x3, y5, ex, ey5)
-         g_Ht.SetTitle('Ht Effic')
+         g_Ht.SetTitle('HT Effic')
          g_Ht.SetMarkerColor(2)
          g_Ht.SetMarkerStyle(5)
          g_Ht.GetXaxis().SetTitle('Pt [GeV]')
          g_Ht.GetYaxis().SetTitle('Effic')
-         g_Ht.GetYaxis().SetRangeUser(0, 1.0)
+#         g_Ht.GetYaxis().SetRangeUser(0, 1.0)
          g_Ht.Draw()
          c1.Update()
          c1.SaveAs('HtEffic.png')
+         c1.Clear()
+
+         x2 = np.linspace(1, 1000, 40+1)
+         y4 = MetEfficVal(x2)
+         ex = np.zeros(41)
+         ey4 = EfficUnc(MetEfficNpass(x2), eventNum)
+
+         g_Met = r.TGraphErrors(n, x2, y4, ex, ey4)
+         g_Met.SetTitle('MET Effic')
+         g_Met.SetMarkerColor(2)
+         g_Met.SetMarkerStyle(5)
+         g_Met.GetXaxis().SetTitle('Pt [GeV]')
+         g_Met.GetYaxis().SetTitle('Effic')
+#         g_Met.GetYaxis().SetRangeUser(0, 1.0)
+         g_Met.Draw()
+         c1.Update()
+         c1.SaveAs('MetEffic.png')
          c1.Clear()
 
   
