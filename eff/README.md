@@ -15,15 +15,13 @@ The created plots are saved as png files. One option for exporting them is to us
 - Command Line Example: `python JetConstructTriggerAnaylsis.py 'file.root' 1 0 1 1 0`
 	- this would run the code over the full dataset using PUPPI particles. It would create and save jet feature plots and efficiency curve plots, but it would not print values for the trigger efficiency and rates. 
 
-- **WARNING**: For some reason using the PF particles of the ntuple in jet construction takes significantly longer and renders the code essentially useless for datasets on the scale of tens of thousands of events. Therefore, please use the PUPPI particle option until this is resolved.
-
 - **NOTE:** the option to RUN over a specific number of events is available by un-commenting the following lines: `numofevents = args.numofevents` and `pbar = tqdm.tqdm(range(int(numofevents))) # argparse option to only RUN over a specific number of events` and `parser.add_argument('numofevents', type=int, help='number of input events')` as well as commenting out `pbar = tqdm.tqdm(range(int(eventNum)))`
 	- this will also change the way you run the code from the command line:
 	- `python JetConstructTriggerAnaylsis.py 'file.root' 1 10000 0 1 1 0`
 	- this would run the same options from the above example except over the first 10000 events of the ntuple
 ---
 **UPDATING TRIGGER REQUIREMENT VALUES**:
-- With the updated of Phase II L1 Trigger TDRs, it will become necessary to update the trigger requirements of these and any triggers added in the future
+- It will become necessary to update the trigger requirements of these and any triggers added in the future
 
 - To make this implementation easier, the triggers are defined as function in the first section of the code before the `main()` section under "*Trigger Effic & Rate Functions*"
 	- Trigger requirements are passed as arguments of these functions which are called at the end of the code under the "*Calling Trigger Effic and Rate Functions*"
@@ -41,8 +39,9 @@ The created plots are saved as png files. One option for exporting them is to us
 
 - **WARNING:** This clustering algorithm creates jets based on their pT and delta-R values for a given threshold. So, some events may have 0 or even 1 jet in total.
 	- Therefore, you should expect a discrepancy in the number of entries (datapoints) for the lead and sublead plots compared to the total events used.
+	- Especially when using PUPPI particles as there may not be enough candidates for 12 jets
 
-- the 12 plots are saved as png files and are labeled as follows: 'h_AllPt.png', 'h_LeadPt.png', 'h_SubLeadPt.png'
+- the 12 plots are saved as png files and are labeled as follows: 'AllPt.png', 'LeadPt.png', 'SubLeadPt.png'
 
 - One may change aspects of the plots (title, axis title and range, bins, etc.) as normal by editing before the plot and canvas are drawn
 ---
@@ -57,10 +56,10 @@ The created plots are saved as png files. One option for exporting them is to us
 		- Defined as: (# of passed events) / (total # of events) * 40 MHz
 		- if this rate is less than or equal to 1 MHz the rate is given in kHz
 
-- Triggers used here (total of 9 triggers):
-	- Jet Triggers: *single jet*, *double jet*, *triple jet*
+- Triggers used here (total of 5 triggers):
+	- Jet Triggers: *single jet*, *double jet*, *quad jet + HT*
 		- the double jet trigger has 4 versions for different requirements such as delta-R and mass. 
-	- Energy Sum Triggers: *missing transverse energy (MET)*, *Ht*, *Et*
+	- Energy Sum Triggers: *missing transverse energy (MET)*, *HT*
 
 - After jet construction and the `eventjets` list is populated, these trigger functions are called with a set of arguments corresponding to the various trigger requirements in terms of pT, eta, phi, mass, etc.
 	- the values of these requirements can be easily modified in the code
@@ -73,8 +72,8 @@ The created plots are saved as png files. One option for exporting them is to us
 **EFFICIENCY CURVES**:
 - Assuming the `effic curve` is turned ON, [`TGraphErrors`](https://root.cern.ch/root/html534/guides/users-guide/Graphs.html) plots will be made for the trigger efficiency
 
-- Of the 9 triggers defined, only 6 have efficiency curves made here
-	- these are: *single jet*,  *double jet*, *double jet + mass*, *triple jet*, *MET*, *HT*
+-  Efficiency curves as a function of pT are plotted for each trigger defined here
+	- these are: *single jet*,  *double jet*, *quad jet + HT*, *MET*, *HT*
 
 - **Calculating these Efficiencies and Uncertainties**
 	- to get the datapoints a separate function for each trigger is defined outside the `main()` section that returns only the efficiency value
@@ -93,4 +92,8 @@ The created plots are saved as png files. One option for exporting them is to us
 - **WARNING**: the error bars are working as intended, but these values are too small to be noticeable on the graph
 	- one can easily scale these errors if necessary by modifying the error bar array filling by a scale factor of your choice
 
+- Also plotted is a single jet efficiency curve as a function of generator-level LLP pT
+	- this plot is a stacked plot with two axes
+	- and this plot applies to the `pfTuple_DisplacedSUSY_stopToBottom_M_800_500mm.root` file where LLP is a stop with `PDG ID = 1000006 
+- the object for which the efficiency is plotted against as well as the trigger used may be re-define in the section where the *pass trigger boolean* is initialized
 ---
